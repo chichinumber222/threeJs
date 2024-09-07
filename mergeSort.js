@@ -29,3 +29,5 @@ function mergeSort(arr) {
 console.log(mergeSort([3, 5, 4, 1]))
 // // //
 
+// 'fsdfsdfsdf'
+// 'sdfsdfsdfsdfdsf'
