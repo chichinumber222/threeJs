@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES6",                 // Версия ECMAScript, в которую будет скомпилирован TypeScript
+    "module": "commonjs",            // Модульная система
+    "strict": true,                  // Включение строгого режима
+    "esModuleInterop": true,         // Поддержка импорта CommonJS модулей в модули ES
+    "skipLibCheck": true,            // Пропустить проверку типов в библиотеках
+    "forceConsistentCasingInFileNames": true, // Проверка согласованности регистров имен файлов
+    "outDir": "./dist",              // Директория для выходных файлов
+    "rootDir": "./src"               // Корневая директория исходных файлов
+  },
+  "include": ["src/**/*.ts"],        // Указывает, какие файлы включать
+  "exclude": ["node_modules"]        // Указывает, какие файлы исключать
+}
