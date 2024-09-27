@@ -1,59 +1,52 @@
-import * as THREE from 'three'
+import * as THREE from "three"
+import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
+import { foreverPlane } from './bootstrap/plane'
+import { stats } from './utils/stats'
 
-function main() {
-    const canvas = document.querySelector('#c')
+const props: InitSceneProps = {
+    backgroundColor: new THREE.Color(0xffffff),
+    fogColor: new THREE.Color(0xffffff)
+}
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, ...(canvas ? { canvas } : {}) })
-    renderer.setSize(window.innerWidth, window.innerHeight)
+initScene(props)(({ camera, scene, renderer, orbitControls }) => {
+    foreverPlane(scene)
 
-    const fov = 75
-    const aspect = 2
-    const near = 0.1
-    const far = 5
-    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
-    camera.position.z = 4
+    const cubeGeometry = new THREE.BoxGeometry()
+    const cubeMaterial = new THREE.MeshPhongMaterial({ color: 0xFF00FF })
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
 
-    const scene = new THREE.Scene()
-  
-    function addLight() {
-        const color = 0xFFFFFF
-        const intensity = 3
-        const light = new THREE.DirectionalLight(color, intensity)
-        light.position.set(-1, 2, 4)
-        scene.add(light)
-    }
-    addLight()
+    cube.position.x = -1
+    cube.castShadow = true
+    scene.add(cube)
 
-    const boxWidth = 1;
-    const boxHeight = 1;
-    const boxDepth = 1;
-    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    const torusKnotGeometry = new THREE.TorusKnotGeometry(0.5, 0.2, 100, 100)
+    const torusKnotMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff88, roughness: 0.1 })
+    const torusKnot = new THREE.Mesh(torusKnotGeometry, torusKnotMaterial)
 
-    function makeInstance(geometry: THREE.BufferGeometry, color: number, x: number) {
-        const material = new THREE.MeshPhongMaterial({ color })
-        const cube = new THREE.Mesh(geometry, material)
-        scene.add(cube)
-        cube.position.x = x
-        return cube
-    }
-    const cubes = [
-        makeInstance(geometry, 0x44aa88, 0),
-        makeInstance(geometry, 0x8844aa, -2),
-        makeInstance(geometry, 0xaa8844, 2),
-    ]
-    
-    function render(time: number) {
-        time *= 0.001
-        cubes.forEach((cube, ndx) => {
-            const speed = 1 + ndx * .1
-            const rot = time * speed
-            cube.rotation.x = rot
-            cube.rotation.y = rot
-        })
+    torusKnot.castShadow = true
+    torusKnot.position.x = 2
+    scene.add(torusKnot)
+
+    camera.position.set(-3, 3, 2)
+    orbitControls?.update()
+
+    let step = 0
+    const animate = () => {
+        cube.rotation.x += 0.01
+        cube.rotation.y += 0.01
+        cube.rotation.z += 0.01
+
+        torusKnot.rotation.x -= 0.01
+        torusKnot.rotation.y += 0.01
+        torusKnot.rotation.z -= 0.01
+
+        step += 0.04
+        cube.position.x += 4 * Math.cos(step)
+        cube.position.y += 4 * Math.abs(Math.sin(step))
+
         renderer.render(scene, camera)
-        window.requestAnimationFrame(render)
+        stats.update()
+        window.requestAnimationFrame(animate)
     }
-    window.requestAnimationFrame(render)
-} 
-
-main()
+    animate()
+})
