@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { initLighting } from './lighting'
 import { onResize } from '../utils/update-on-resize'
-import { initOrbitControls } from '../controller/orbit-controller'
+import { initOrbitControls } from '../controller/orbit'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 export interface Props {
@@ -46,7 +46,7 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLi
         renderer.setSize(window.innerWidth, window.innerHeight)
         document.body.appendChild(renderer.domElement)
         // init orbit controls
-        let orbitControls
+        let orbitControls 
         if (!disableDefaultControls) {
             orbitControls = initOrbitControls(camera, renderer)
         }
