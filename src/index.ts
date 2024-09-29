@@ -5,6 +5,7 @@ import { stats } from './utils/stats'
 import GUI from 'lil-gui'
 import { initHelpersControls } from './controls/helpers'
 import { initAddRemoveCubeControls } from './controls/add-remove-cube-controls'
+import { initSceneControls } from './controls/initSceneControls'
 
 const props: InitSceneProps = {
     backgroundColor: new THREE.Color(0xffffff),
@@ -28,6 +29,7 @@ initScene(props)(({ camera, scene, renderer, orbitControls }) => {
     }
     animate()
 
-    initAddRemoveCubeControls(gui, scene)
     initHelpersControls(gui, scene)
+    initSceneControls(gui, scene)
+    initAddRemoveCubeControls(gui, scene)
 })
