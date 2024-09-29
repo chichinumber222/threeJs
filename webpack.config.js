@@ -23,7 +23,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
   },
   devtool: 'source-map',
   devServer: {
@@ -37,4 +37,4 @@ module.exports = {
       filename: 'index.html'         // Название выходного HTML-файла
     })
   ]
-};
+}
