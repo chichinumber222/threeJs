@@ -14,3 +14,17 @@ export const foreverPlane = (scene: THREE.Scene) => {
 
     return mesh
 }
+
+export const foreverFloor = (scene: THREE.Scene, size?: number) => {
+    const s = size ? size : 6
+    const geometry = new THREE.BoxGeometry(s, 0.25, s)
+    const material = new THREE.MeshStandardMaterial({ color: 0xdddddd })
+    const mesh = new THREE.Mesh(geometry, material)
+
+    mesh.position.set(0, -2, -1)
+    mesh.receiveShadow = true
+    mesh.name = 'floating-floor'
+    scene.add(mesh)
+
+    return mesh
+}

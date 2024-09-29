@@ -5,10 +5,10 @@ export interface Props {
 }
 
 export const initLighting = (scene: THREE.Scene, { disableShadows }: Props) => {
-    const ambientLight = new THREE.AmbientLight(0x666666) // темно-серый
+    const ambientLight = new THREE.AmbientLight(0x666666, 5) // темно-серый
     scene.add(ambientLight) 
 
-    const directionalLight = new THREE.DirectionalLight(0xaaaaaa, 1) // светло-серый
+    const directionalLight = new THREE.DirectionalLight(0xaaaaaa, 5) // светло-серый
     directionalLight.position.set(5, 12, 8)
     directionalLight.castShadow = !disableShadows
     directionalLight.shadow.camera.near = 0.1
@@ -21,5 +21,6 @@ export const initLighting = (scene: THREE.Scene, { disableShadows }: Props) => {
     directionalLight.shadow.mapSize.height = 2048
     directionalLight.shadow.radius = 4
     directionalLight.shadow.bias = -0.00005
+    
     scene.add(directionalLight)
 }
