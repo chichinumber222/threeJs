@@ -2,7 +2,7 @@ import * as THREE from "three"
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { foreverPlane } from './bootstrap/floor'
 import { stats } from './utils/stats'
-import { initHelpersControls } from './controls/helpers'
+import { initHelpersControls } from './controls/helper-controls'
 import GUI from 'lil-gui'
 
 const props: InitSceneProps = {

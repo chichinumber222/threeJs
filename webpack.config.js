@@ -1,5 +1,5 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
   mode: 'development',
@@ -15,6 +15,15 @@ module.exports = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: 'ts-loader'
+      },
+      {
+        test: /\.(gltf|glb|bin)$/,
+        exclude: /node_modules/,
+        use: 'file-loader',
+      },
+      {
+        test: /\.glsl$/i,
+        use: 'raw-loader',
       },
       {
         test: /\.(png|jpg|jpeg|gif|svg)$/i,

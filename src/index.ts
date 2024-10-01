@@ -1,35 +1,50 @@
 import * as THREE from 'three'
-import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
-import { foreverFloor } from './bootstrap/floor'
-import { stats } from './utils/stats'
 import GUI from 'lil-gui'
-import { initHelpersControls } from './controls/helpers'
-import { initAddRemoveCubeControls } from './controls/add-remove-cube-controls'
-import { initSceneControls } from './controls/initSceneControls'
+import WaterfallGLTF from './assets/gltf/waterfall/scene.glb'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
+import { stats } from './utils/stats'
+import { initHelpersControls } from './controls/helper-controls'
+import { initializeAmbientLightControls } from './controls/ambient-light-controls'
 
 const props: InitSceneProps = {
-    backgroundColor: new THREE.Color(0xffffff),
-    fogColor: new THREE.Color(0xffffff)
+  backgroundColor: new THREE.Color(0xcccccc),
+  disableLights: true
 }
-
 const gui = new GUI()
 
-initScene(props)(({ camera, scene, renderer, orbitControls }) => {
-    foreverFloor(scene, 10)
+const loadAndAddWaterfall = (scene: THREE.Scene) => {
+  const loader = new GLTFLoader()
+  loader.load(WaterfallGLTF, (loadedObject) => {
+    const loadedScene = loadedObject.scene
+    scene.add(loadedScene)
+  })
+}
 
-    camera.position.set(-7, 2, 5)
+const getAmbientLight = () => {
+  const light = new THREE.AmbientLight(0xffffff, 1)
+  light.name = 'ambient-light'
+  return light
+}
+
+initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+  camera.position.set(-7, 2, 5)
+  orbitControls?.update()
+
+  loadAndAddWaterfall(scene)
+
+  function animate() {
+    requestAnimationFrame(animate)
+    renderer.render(scene, camera)
+    stats.update()
+
     orbitControls?.update()
+  }
+  animate()
 
-    const animate = () => {
-        renderer.render(scene, camera)
-        stats.update()
-        window.requestAnimationFrame(animate)
+  const ambientLight = getAmbientLight()
+  scene.add(ambientLight)
 
-        orbitControls?.update()
-    }
-    animate()
-
-    initHelpersControls(gui, scene)
-    initSceneControls(gui, scene)
-    initAddRemoveCubeControls(gui, scene)
+  initializeAmbientLightControls(gui, ambientLight)
+  initHelpersControls(gui, scene)
 })

@@ -7,9 +7,31 @@ const textureLoader = new THREE.TextureLoader()
 
 const backgroundValues = ['White', 'Black', 'Null', 'Color', 'Texture', 'Cubemap']
 
-const sceneProps = {
-    background: backgroundValues[0]
-}
+const getSceneProps = (scene: THREE.Scene) => ({
+    background: backgroundValues[0],
+    overrideMaterial: {
+        toggle: () => {
+            if (scene.overrideMaterial !== null) {
+                scene.overrideMaterial = null
+                return
+            }
+            scene.overrideMaterial = new THREE.MeshNormalMaterial()
+        }
+    },
+    environment: {
+        toggle: () => {
+            if (scene.environment !== null) {
+                scene.environment = null
+                return
+            }
+            textureLoader.load(Cubemap, (loaded) => {
+                loaded.mapping = THREE.EquirectangularReflectionMapping
+                scene.environment = loaded
+            })
+        }
+    },
+})
+
 
 const handleBackgroundChange = (value: typeof backgroundValues[number], scene: THREE.Scene) => {
     switch (value) {
@@ -74,9 +96,16 @@ const initFogControl = (parentFolder: GUI, fog: THREE.Fog | THREE.FogExp2) => {
 
 export const initSceneControls = (gui: GUI, scene: THREE.Scene) => {
     const sceneFolder = gui.addFolder('Сцена')
+    const sceneProps = getSceneProps(scene)
     sceneFolder
         .add(sceneProps, 'background', backgroundValues)
         .onChange((value: typeof backgroundValues[number]) => handleBackgroundChange(value, scene))
+    sceneFolder
+        .add(sceneProps.overrideMaterial, 'toggle')
+        .name('Toggle Override Material')
+    sceneFolder
+        .add(sceneProps.environment, 'toggle')
+        .name('Toggle Environment')
     if (scene.fog) {
         initFogControl(sceneFolder, scene.fog)
     }
