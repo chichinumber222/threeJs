@@ -32,10 +32,11 @@ const getAmbientLight = () => {
 
 const getSpotLightHelper = (spotLight: THREE.SpotLight) => {
     const helper = new THREE.SpotLightHelper(spotLight)
-    helper.visible = false
+    helper.visible = true
     return helper
 }
 
+// движение мной созданного объекта (и свет за ним)
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.set(-7, 2, 5)
   orbitControls?.update()
@@ -57,6 +58,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     renderer.render(scene, camera)
     stats.update()
 
+    floor.position.x += 0.005
+
     spotLightHelper.update()
     orbitControls?.update()
   }
@@ -65,3 +68,37 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   initializeSpotLightControls(gui, spotLight, spotLightHelper)
   initHelpersControls(gui, scene)
 })
+
+// движение автоматичеси созданного объекта у света (и свет за ним)
+// initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+//   camera.position.set(-7, 2, 5)
+//   orbitControls?.update()
+
+//   const ambientLight = getAmbientLight()
+//   scene.add(ambientLight)
+
+//   const spotLight = getSpotLight()
+//   scene.add(spotLight)
+
+//   const startObjecct = spotLight.target
+//   scene.add(startObjecct)
+
+//   const spotLightHelper = getSpotLightHelper(spotLight)
+//   scene.add(spotLightHelper)
+
+//   function animate() {
+//     requestAnimationFrame(animate)
+//     renderer.render(scene, camera)
+//     stats.update()
+
+//     startObjecct.position.x += 0.005
+
+//     spotLightHelper.update()
+//     orbitControls?.update()
+//   }
+//   animate()
+
+//   initializeSpotLightControls(gui, spotLight, spotLightHelper)
+//   initHelpersControls(gui, scene)
+// })
+
