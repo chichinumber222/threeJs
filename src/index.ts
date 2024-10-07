@@ -65,9 +65,9 @@ import GUI from 'lil-gui'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
-import { foreverFloor, foreverPlane } from './bootstrap/floor'
+import { foreverPlane } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
+import { initPointerControls } from './controller/pointer'
 const props: InitSceneProps = {
     backgroundColor: new THREE.Color(0xffffff),
     disableDefaultControls: true,
@@ -87,97 +87,14 @@ const mountCube = (scene: THREE.Scene) => {
 
 initScene(props)(({ scene, camera, renderer }) => {
     camera.position.z = 3
-
-    const controls = new PointerLockControls(camera, document.body)
-
-    controls.addEventListener('lock', function () {
-        controls.isLocked = false
-        console.log('lock')
-
-    })
-
-    controls.addEventListener('unlock', function () {
-        controls.isLocked = true
-        console.log('unlock')
-    })
-
-    let isLock = false
-    window.addEventListener('click', () => {
-        console.log('click')
-        isLock = !isLock
-        if (isLock) {
-            controls.lock()
-        } else {
-            controls.unlock()
-        }
-    })
-
-    const movement = {
-        w: false,
-        a: false,
-        s: false,
-        d: false
-    }
-
-    window.addEventListener('keydown', function (event) {
-        if (!controls.isLocked) {
-            return
-        }
-        switch (event.key) {
-            case 'w':
-            case 'W':
-                movement.w = true
-                break
-            case 'a':
-            case 'A':
-                movement.a = true
-                break
-            case 's':
-            case 'S':
-                movement.s = true
-                break
-            case 'd':
-            case 'D':
-                movement.d = true
-                break
-            default:
-                break
-        }
-    })
-
-    window.addEventListener('keyup', function (event) {
-        switch (event.key) {
-            case 'w':
-            case 'W':
-                movement.w = false
-                break
-            case 'a':
-            case 'A':
-                movement.a = false
-                break
-            case 's':
-            case 'S':
-                movement.s = false
-                break
-            case 'd':
-            case 'D':
-                movement.d = false
-                break
-            default:
-                break
-        }
-    })
-
-
+ 
     foreverPlane(scene)
 
     mountCube(scene)
 
+    initPointerControls(camera, document.body)
+
     function animate() {
-        if (movement.w) controls.moveForward(0.03)
-        if (movement.a) controls.moveRight(-0.03)
-        if (movement.s) controls.moveForward(-0.03)
-        if (movement.d) controls.moveRight(0.03)
         requestAnimationFrame(animate)
         renderer.render(scene, camera)
         stats.update()
@@ -187,4 +104,3 @@ initScene(props)(({ scene, camera, renderer }) => {
     initSceneControls(gui, scene)
     initHelpersControls(gui, scene)
 })
-
