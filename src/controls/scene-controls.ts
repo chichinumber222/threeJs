@@ -59,6 +59,15 @@ const handleBackgroundChange = (value: typeof backgroundValues[number], scene: T
                 loaded.mapping = THREE.EquirectangularReflectionMapping
                 scene.background = loaded
                 scene.environment = loaded
+                // scene.traverse((mesh) => {
+                //     if (mesh instanceof THREE.Mesh) {
+                //        if (Array.isArray(mesh.material)) {
+                //             mesh.material.forEach(material => material.envMap = loaded)
+                //        } else {
+                //             mesh.material.envMap = loaded
+                //        }
+                //     }
+                // })
             })
             break
         default:
