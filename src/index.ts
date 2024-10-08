@@ -92,7 +92,7 @@ initScene(props)(({ scene, camera, renderer }) => {
 
     mountCube(scene)
 
-    initPointerControls(camera, document.body)
+    initPointerControls(camera, renderer.domElement)
 
     function animate() {
         requestAnimationFrame(animate)
@@ -104,3 +104,4 @@ initScene(props)(({ scene, camera, renderer }) => {
     initSceneControls(gui, scene)
     initHelpersControls(gui, scene)
 })
+

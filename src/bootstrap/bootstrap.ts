@@ -44,6 +44,7 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLi
         }
         onResize(camera, renderer)
         renderer.setSize(window.innerWidth, window.innerHeight)
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         document.body.appendChild(renderer.domElement)
         // init orbit controls
         let orbitControls 
