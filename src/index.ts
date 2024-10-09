@@ -12,9 +12,14 @@ const props: InitSceneProps = {
 
 const gui = new GUI()
 
+const textureLoader = new THREE.TextureLoader()
+
 const mountCube = (scene: THREE.Scene) => {
+    const texture = textureLoader.load('./static/wall.jpg')
     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5, 3, 3, 3)
-    const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.2  })
+
+    console.log('geometry.attributes', geometry.attributes)
+    const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.2, map: texture  })
 
     const positionAttribute = geometry.attributes.position
     const index = 42
@@ -34,7 +39,7 @@ const mountCube = (scene: THREE.Scene) => {
 
 const mountSphere = (scene: THREE.Scene) => {
     const geometry = new THREE.SphereGeometry(2, 10, 10)
-    const material = new THREE.MeshLambertMaterial({ color: 0x7777ff })
+    const material = new THREE.MeshStandardMaterial({ color: 0x7777ff })
     const sphere = new THREE.Mesh(geometry, material)
 
     sphere.position.set(1, 2, 3);
