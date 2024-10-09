@@ -5,6 +5,7 @@ import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
 import { foreverPlane } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
+import { initMeshControls } from './controls/mesh-controls'
 const props: InitSceneProps = {
     backgroundColor: new THREE.Color(0xffffff),
 }
@@ -31,6 +32,19 @@ const mountCube = (scene: THREE.Scene) => {
     return cube
 }
 
+const mountSphere = (scene: THREE.Scene) => {
+    const geometry = new THREE.SphereGeometry(2, 10, 10)
+    const material = new THREE.MeshLambertMaterial({ color: 0x7777ff })
+    const sphere = new THREE.Mesh(geometry, material)
+
+    sphere.position.set(1, 2, 3);
+    sphere.castShadow = true
+    sphere.name = 'sphere'
+    scene.add(sphere)
+
+    return sphere
+}
+
 const mountSpotLight = (scene: THREE.Scene) => {
     const light = new THREE.SpotLight(0xffffff, 3)
 
@@ -51,7 +65,9 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
     foreverPlane(scene)
 
-    mountCube(scene)
+    const cube = mountCube(scene)
+
+    const sphere = mountSphere(scene)
 
     mountSpotLight(scene)
 
@@ -64,5 +80,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     animate()
 
     initSceneControls(gui, scene)
+    initMeshControls(cube, gui)
+    initMeshControls(sphere, gui)
     initHelpersControls(gui, scene)
 })
