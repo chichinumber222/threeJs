@@ -88,4 +88,3 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     initMeshControls(sphere, gui)
     initHelpersControls(gui, scene)
 })
-
