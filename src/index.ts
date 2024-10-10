@@ -6,6 +6,7 @@ import { initHelpersControls } from './controls/helper-controls'
 import { foreverPlane } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
 import { initMeshControls } from './controls/mesh-controls'
+
 const props: InitSceneProps = {
     backgroundColor: new THREE.Color(0xffffff),
 }
@@ -17,8 +18,6 @@ const textureLoader = new THREE.TextureLoader()
 const mountCube = (scene: THREE.Scene) => {
     const texture = textureLoader.load('./static/wall.jpg')
     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5, 3, 3, 3)
-
-    console.log('geometry.attributes', geometry.attributes)
     const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.2, map: texture  })
 
     const positionAttribute = geometry.attributes.position
