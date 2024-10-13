@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
+
 export const initOrbitControls = (camera: THREE.Camera, renderer: THREE.Renderer) => {
   const controller = new OrbitControls(camera, renderer.domElement)
   controller.enableDamping = true

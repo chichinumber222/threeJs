@@ -1,14 +1,14 @@
 import * as THREE from 'three'
 
 interface Range {
-    from: number
-    to: number
+  from: number
+  to: number
 }
 
 export interface Props {
-    xRange: Range
-    yRange: Range
-    zRange: Range
+  xRange: Range
+  yRange: Range
+  zRange: Range
 };
 
 export const randomVector = ({ xRange, yRange, zRange }: Props) => {
