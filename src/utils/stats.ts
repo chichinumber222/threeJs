@@ -1,5 +1,6 @@
 import Stats from 'stats.js'
 
+
 const stats = new Stats()
 stats.dom.style.position = 'absolute'
 stats.dom.style.top = '0px'
