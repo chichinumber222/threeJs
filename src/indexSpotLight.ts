@@ -25,15 +25,15 @@ const getSpotLight = () => {
 }
 
 const getAmbientLight = () => {
-    const light = new THREE.AmbientLight(0xffffff, 2)
-    light.name = 'ambient-light'
-    return light
-  }
+  const light = new THREE.AmbientLight(0xffffff, 2)
+  light.name = 'ambient-light'
+  return light
+}
 
 const getSpotLightHelper = (spotLight: THREE.SpotLight) => {
-    const helper = new THREE.SpotLightHelper(spotLight)
-    helper.visible = true
-    return helper
+  const helper = new THREE.SpotLightHelper(spotLight)
+  helper.visible = true
+  return helper
 }
 
 // движение мной созданного объекта (и свет за ним)

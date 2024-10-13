@@ -6,3 +6,4 @@ interface Document {
 interface HTMLElement {
     webkitRequestFullScreen(options?: FullscreenOptions): Promise<void>
 }
+

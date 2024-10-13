@@ -126,95 +126,95 @@ let renderer: THREE.WebGLRenderer
 let scene: THREE.Scene
 
 function init() {
-    const stats = initStats()
-    scene = new THREE.Scene()
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+  const stats = initStats()
+  scene = new THREE.Scene()
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-    renderer = new THREE.WebGLRenderer()
-    renderer.setClearColor(0xEEEEEE)
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.shadowMap.enabled = true
+  renderer = new THREE.WebGLRenderer()
+  renderer.setClearColor(0xEEEEEE)
+  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.shadowMap.enabled = true
 
-    const axes = new THREE.AxesHelper(20)
-    scene.add(axes)
+  const axes = new THREE.AxesHelper(20)
+  scene.add(axes)
 
-    const planeGeometry = new THREE.PlaneGeometry(60, 20)
-    const planeMaterial = new THREE.MeshLambertMaterial({ color: 0xCCCCCC })
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial)
-    plane.rotation.x = - 0.5 * Math.PI
-    plane.position.set(15, 0, 0);
-    plane.receiveShadow = true
-    scene.add(plane)
+  const planeGeometry = new THREE.PlaneGeometry(60, 20)
+  const planeMaterial = new THREE.MeshLambertMaterial({ color: 0xCCCCCC })
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial)
+  plane.rotation.x = - 0.5 * Math.PI
+  plane.position.set(15, 0, 0)
+  plane.receiveShadow = true
+  scene.add(plane)
 
-    const cubeGeometry = new THREE.BoxGeometry(4, 4, 4)
-    const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 })
-    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-    cube.position.set(-4, 3, 0);
-    cube.castShadow = true
-    scene.add(cube)
+  const cubeGeometry = new THREE.BoxGeometry(4, 4, 4)
+  const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 })
+  const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+  cube.position.set(-4, 3, 0)
+  cube.castShadow = true
+  scene.add(cube)
 
-    const sphereGeometry = new THREE.SphereGeometry(4, 20, 20)
-    const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0x7777ff })
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(20, 4, 2);
-    sphere.castShadow = true
-    scene.add(sphere)
-    let sphereStep = 0
+  const sphereGeometry = new THREE.SphereGeometry(4, 20, 20)
+  const sphereMaterial = new THREE.MeshLambertMaterial({ color: 0x7777ff })
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+  sphere.position.set(20, 4, 2)
+  sphere.castShadow = true
+  scene.add(sphere)
+  let sphereStep = 0
 
-    const parametersGUI = {
-        rotationSpeed: 0.02,
-        bouncingSpeed: 0.03
-    }
-    const datGUI = new dat.GUI()
-    datGUI.add(parametersGUI, 'rotationSpeed', 0, 0.1)
-    datGUI.add(parametersGUI, 'bouncingSpeed', 0, 0.1)
+  const parametersGUI = {
+    rotationSpeed: 0.02,
+    bouncingSpeed: 0.03
+  }
+  const datGUI = new dat.GUI()
+  datGUI.add(parametersGUI, 'rotationSpeed', 0, 0.1)
+  datGUI.add(parametersGUI, 'bouncingSpeed', 0, 0.1)
 
-    camera.position.set(-30, 40, 30);
-    camera.lookAt(scene.position)
+  camera.position.set(-30, 40, 30)
+  camera.lookAt(scene.position)
 
-    const spotLight = new THREE.SpotLight(0xFFFFFF, 4)
-    spotLight.position.set(-40, 60, -10)
-    spotLight.castShadow = true
-    spotLight.decay = 0.1
-    spotLight.shadow.mapSize.width = 2048;
-    spotLight.shadow.mapSize.height = 2048;
-    scene.add(spotLight)
+  const spotLight = new THREE.SpotLight(0xFFFFFF, 4)
+  spotLight.position.set(-40, 60, -10)
+  spotLight.castShadow = true
+  spotLight.decay = 0.1
+  spotLight.shadow.mapSize.width = 2048
+  spotLight.shadow.mapSize.height = 2048
+  scene.add(spotLight)
 
-    function initStats() {
-        const stats = new Stats()
-        stats.dom.style.position = 'absolute'
-        stats.dom.style.top = '0px'
-        stats.dom.style.left = '0px'
-        document.getElementById('Stats-output')?.appendChild(stats.dom)
-        return stats
-    }
+  function initStats() {
+    const stats = new Stats()
+    stats.dom.style.position = 'absolute'
+    stats.dom.style.top = '0px'
+    stats.dom.style.left = '0px'
+    document.getElementById('Stats-output')?.appendChild(stats.dom)
+    return stats
+  }
 
-    function renderScene() {
-        cube.rotation.x += parametersGUI.rotationSpeed
-        cube.rotation.y += parametersGUI.rotationSpeed
-        cube.rotation.z += parametersGUI.rotationSpeed
+  function renderScene() {
+    cube.rotation.x += parametersGUI.rotationSpeed
+    cube.rotation.y += parametersGUI.rotationSpeed
+    cube.rotation.z += parametersGUI.rotationSpeed
 
-        sphereStep += parametersGUI.bouncingSpeed
-        sphere.position.x = 20  + (10 * Math.cos(sphereStep))
-        sphere.position.y = 2 + (10 * Math.abs(Math.sin(sphereStep)))
+    sphereStep += parametersGUI.bouncingSpeed
+    sphere.position.x = 20  + (10 * Math.cos(sphereStep))
+    sphere.position.y = 2 + (10 * Math.abs(Math.sin(sphereStep)))
 
-        renderer.render(scene, camera)
-        stats.update()
-        window.requestAnimationFrame(renderScene)
-    }
+    renderer.render(scene, camera)
+    stats.update()
+    window.requestAnimationFrame(renderScene)
+  }
 
-    document.getElementById('WebGL-output')?.appendChild(renderer.domElement)
-    renderScene()
+  document.getElementById('WebGL-output')?.appendChild(renderer.domElement)
+  renderScene()
 }
 
 function onResize() {
-    if (camera) {
-        camera.aspect = window.innerWidth / window.innerHeight
-        camera.updateProjectionMatrix()
-    }
-    if (renderer) {
-        renderer.setSize(window.innerWidth, window.innerHeight)
-    }
+  if (camera) {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+  }
+  if (renderer) {
+    renderer.setSize(window.innerWidth, window.innerHeight)
+  }
 }
 
 window.onload = init

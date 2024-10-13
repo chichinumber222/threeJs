@@ -7,7 +7,7 @@ import { initHelpersControls } from './controls/helper-controls'
 import { foreverFloor } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import gsap from 'gsap'
+// import gsap from 'gsap'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xffffff),

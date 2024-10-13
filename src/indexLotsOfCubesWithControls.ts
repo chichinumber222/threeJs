@@ -8,28 +8,28 @@ import { initAddRemoveCubeControls } from './controls/add-remove-cube-controls'
 import { initSceneControls } from './controls/scene-controls'
 
 const props: InitSceneProps = {
-    backgroundColor: new THREE.Color(0xffffff),
-    fogColor: new THREE.Color(0xffffff)
+  backgroundColor: new THREE.Color(0xffffff),
+  fogColor: new THREE.Color(0xffffff)
 }
 
 const gui = new GUI()
 
 initScene(props)(({ camera, scene, renderer, orbitControls }) => {
-    foreverFloor(scene, 10)
+  foreverFloor(scene, 10)
 
-    camera.position.set(-7, 2, 5)
+  camera.position.set(-7, 2, 5)
+  orbitControls?.update()
+
+  const animate = () => {
+    renderer.render(scene, camera)
+    stats.update()
+    window.requestAnimationFrame(animate)
+
     orbitControls?.update()
+  }
+  animate()
 
-    const animate = () => {
-        renderer.render(scene, camera)
-        stats.update()
-        window.requestAnimationFrame(animate)
-
-        orbitControls?.update()
-    }
-    animate()
-
-    initHelpersControls(gui, scene)
-    initSceneControls(gui, scene)
-    initAddRemoveCubeControls(gui, scene)
+  initHelpersControls(gui, scene)
+  initSceneControls(gui, scene)
+  initAddRemoveCubeControls(gui, scene)
 })

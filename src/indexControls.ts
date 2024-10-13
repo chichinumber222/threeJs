@@ -69,47 +69,47 @@ import { foreverPlane } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
 import { initPointerControls } from './controller/pointer'
 const props: InitSceneProps = {
-    backgroundColor: new THREE.Color(0xffffff),
-    disableDefaultControls: true,
+  backgroundColor: new THREE.Color(0xffffff),
+  disableDefaultControls: true,
 }
 
 const guiContainer = document.getElementById('GUI-output') || undefined
 const gui = new GUI({ container: guiContainer, title: 'Control Panel' });
 // пока так
 ['click', 'dblclick', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
-    gui.domElement.addEventListener(eventType, function(event) {
-        event.stopPropagation();
-    });
-});
+  gui.domElement.addEventListener(eventType, function(event) {
+    event.stopPropagation()
+  })
+})
 
 
 const mountCube = (scene: THREE.Scene) => {
-    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
-    const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', clearcoat: 1, clearcoatRoughness: 0.2 })
-    const cube = new THREE.Mesh(geometry, material)
-    cube.castShadow = true
-    cube.name = 'cube'
-    scene.add(cube)
-    return cube
+  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+  const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', clearcoat: 1, clearcoatRoughness: 0.2 })
+  const cube = new THREE.Mesh(geometry, material)
+  cube.castShadow = true
+  cube.name = 'cube'
+  scene.add(cube)
+  return cube
 }
 
 initScene(props)(({ scene, camera, renderer }) => {
-    camera.position.z = 3
+  camera.position.z = 3
  
-    foreverPlane(scene)
+  foreverPlane(scene)
 
-    mountCube(scene)
+  mountCube(scene)
 
-    initPointerControls(camera, renderer.domElement)
+  initPointerControls(camera, renderer.domElement)
 
-    function animate() {
-        requestAnimationFrame(animate)
-        renderer.render(scene, camera)
-        stats.update()
-    }
-    animate()
+  function animate() {
+    requestAnimationFrame(animate)
+    renderer.render(scene, camera)
+    stats.update()
+  }
+  animate()
 
-    initSceneControls(gui, scene)
-    initHelpersControls(gui, scene)
+  initSceneControls(gui, scene)
+  initHelpersControls(gui, scene)
 })
 
