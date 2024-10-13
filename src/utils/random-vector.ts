@@ -9,7 +9,7 @@ export interface Props {
   xRange: Range
   yRange: Range
   zRange: Range
-};
+}
 
 export const randomVector = ({ xRange, yRange, zRange }: Props) => {
   const x = Math.random() * (xRange.to - xRange.from) + xRange.from
