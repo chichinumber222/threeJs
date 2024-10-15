@@ -8,8 +8,8 @@ export interface Props {
     backgroundColor?: THREE.Color
     fogColor?: THREE.ColorRepresentation
     disableShadows?: boolean
-    disableLights?: boolean
-    disableShadowsOnLights?: boolean
+    disableDefaultLights?: boolean
+    disableShadowsOnDefaultLights?: boolean
     disableDefaultControls?: boolean
 }
 
@@ -24,7 +24,7 @@ export interface Fn {
     (args: Params): void
 }
 
-export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLights, disableShadowsOnLights, disableDefaultControls }: Props) => {
+export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDefaultLights, disableShadowsOnDefaultLights, disableDefaultControls }: Props) => {
   return (fn: Fn) => {
     // basic scene setup
     const scene = new THREE.Scene()
@@ -53,8 +53,8 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLi
       orbitControls = initOrbitControls(camera, renderer)
     }
     // add some basic lighting to the scene
-    if (!disableLights) {
-      initLighting(scene, { disableShadowsOnLights })
+    if (!disableDefaultLights) {
+      initLighting(scene, { disableShadowsOnDefaultLights })
     }
     // call fn
     fn({ scene, camera, renderer, orbitControls })

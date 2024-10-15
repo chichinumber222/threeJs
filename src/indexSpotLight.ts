@@ -8,7 +8,7 @@ import { initializeSpotLightControls } from './controls/spot-light-controls'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xcccccc),
-  disableLights: true
+  disableDefaultLights: true
 }
 const gui = new GUI()
 

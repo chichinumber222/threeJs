@@ -9,7 +9,7 @@ import { initializeAmbientLightControls } from './controls/ambient-light-control
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xcccccc),
-  disableLights: true
+  disableDefaultLights: true
 }
 const gui = new GUI()
 

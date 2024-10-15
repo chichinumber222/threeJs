@@ -1,16 +1,16 @@
 import * as THREE from 'three'
 
 export interface Props {
-  disableShadowsOnLights?: boolean 
+  disableShadowsOnDefaultLights?: boolean 
 }
 
-export const initLighting = (scene: THREE.Scene, { disableShadowsOnLights }: Props) => {
+export const initLighting = (scene: THREE.Scene, { disableShadowsOnDefaultLights }: Props) => {
   const ambientLight = new THREE.AmbientLight(0xffffff, 2)
   scene.add(ambientLight) 
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 2)
   directionalLight.position.set(1, 3, 2)
-  directionalLight.castShadow = !disableShadowsOnLights
+  directionalLight.castShadow = !disableShadowsOnDefaultLights
   directionalLight.shadow.camera.near = 0.1
   directionalLight.shadow.camera.far = 20
   directionalLight.shadow.camera.right = 5
