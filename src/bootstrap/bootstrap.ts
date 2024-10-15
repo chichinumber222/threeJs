@@ -9,6 +9,7 @@ export interface Props {
     fogColor?: THREE.ColorRepresentation
     disableShadows?: boolean
     disableLights?: boolean
+    disableShadowsOnLights?: boolean
     disableDefaultControls?: boolean
 }
 
@@ -23,7 +24,7 @@ export interface Fn {
     (args: Params): void
 }
 
-export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLights, disableDefaultControls }: Props) => {
+export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLights, disableShadowsOnLights, disableDefaultControls }: Props) => {
   return (fn: Fn) => {
     // basic scene setup
     const scene = new THREE.Scene()
@@ -34,10 +35,10 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLi
       scene.fog = new THREE.Fog(fogColor, 0.0025, 50)
     }
     // setup camera and basic renderer
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.shadowMap.enabled = true
+    renderer.shadowMap.enabled = !disableShadows
     renderer.shadowMap.type = THREE.VSMShadowMap
     if (backgroundColor) {
       renderer.setClearColor(backgroundColor)
@@ -51,9 +52,9 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableLi
     if (!disableDefaultControls) {
       orbitControls = initOrbitControls(camera, renderer)
     }
-    // add some basic lightting to the scene
+    // add some basic lighting to the scene
     if (!disableLights) {
-      initLighting(scene, { disableShadows })
+      initLighting(scene, { disableShadowsOnLights })
     }
     // call fn
     fn({ scene, camera, renderer, orbitControls })

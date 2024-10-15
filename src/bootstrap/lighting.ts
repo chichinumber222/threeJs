@@ -1,25 +1,25 @@
 import * as THREE from 'three'
 
 export interface Props {
-    disableShadows?: boolean 
+  disableShadowsOnLights?: boolean 
 }
 
-export const initLighting = (scene: THREE.Scene, { disableShadows }: Props) => {
-  const ambientLight = new THREE.AmbientLight(0x666666, 5) // темно-серый
+export const initLighting = (scene: THREE.Scene, { disableShadowsOnLights }: Props) => {
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2)
   scene.add(ambientLight) 
 
-  const directionalLight = new THREE.DirectionalLight(0xaaaaaa, 5) // светло-серый
-  directionalLight.position.set(5, 12, 8)
-  directionalLight.castShadow = !disableShadows
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 2)
+  directionalLight.position.set(1, 3, 2)
+  directionalLight.castShadow = !disableShadowsOnLights
   directionalLight.shadow.camera.near = 0.1
-  directionalLight.shadow.camera.far = 200
-  directionalLight.shadow.camera.right = 10
-  directionalLight.shadow.camera.left = -10
-  directionalLight.shadow.camera.top = 10
-  directionalLight.shadow.camera.bottom = -10
-  directionalLight.shadow.mapSize.width = 2048
-  directionalLight.shadow.mapSize.height = 2048
-  directionalLight.shadow.radius = 4
+  directionalLight.shadow.camera.far = 20
+  directionalLight.shadow.camera.right = 5
+  directionalLight.shadow.camera.left = -5
+  directionalLight.shadow.camera.top = 5
+  directionalLight.shadow.camera.bottom = -5
+  directionalLight.shadow.mapSize.width = 1024
+  directionalLight.shadow.mapSize.height = 1024
+  directionalLight.shadow.radius = 2
   directionalLight.shadow.bias = -0.00005
     
   scene.add(directionalLight)
