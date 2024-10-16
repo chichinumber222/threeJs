@@ -4,6 +4,7 @@ import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
 import { foreverPlane } from './bootstrap/floor'
+import { initSceneControls } from './controls/scene-controls'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xffffff),
@@ -13,7 +14,6 @@ const props: InitSceneProps = {
 
 const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
-const shadowTexture = textureLoader.load('./static/simpleShadow.jpg')
 
 const mountSphere = (scene: THREE.Scene, target?: THREE.Vector3) => {
   const geometry = new THREE.SphereGeometry(0.5, 20, 20)
@@ -29,6 +29,7 @@ const mountSphere = (scene: THREE.Scene, target?: THREE.Vector3) => {
 
 const mountFakeShadow = (scene: THREE.Scene, target?: THREE.Vector3) => {
   const geometry = new THREE.PlaneGeometry(1.5, 1.5)
+  const shadowTexture = textureLoader.load('./static/simpleShadow.jpg')
   const material = new THREE.MeshBasicMaterial({ color: 'black', alphaMap: shadowTexture, transparent: true })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.set(-Math.PI * 0.5, 0, 0)
@@ -63,11 +64,42 @@ const mountHemisphereLightWithGUI = (scene: THREE.Scene) => {
   return light
 }
 
-initScene(props)(({ scene, camera, renderer }) => {
-  camera.position.z = 8
+const mountSmoke = (scene: THREE.Scene, color: number = 0xd450e6, amplitudeY: number = 2, widthXZ: number = 3, speed: number = 4) => {
+  const light = new THREE.PointLight(color, 1.5, 4)
+  scene.add(light)
 
+  const smokeGeometry = new THREE.SphereGeometry(0.3, 6, 9)
+  const smokeMaterial = new THREE.MeshStandardMaterial({ color: color, opacity: 0.05, transparent: true })
+  const meshes: THREE.Mesh[] = Array.from({ length: 10 }, () => new THREE.Mesh(smokeGeometry, smokeMaterial))
+  scene.add(...meshes)
+
+  const clock = new THREE.Clock()
+  let prevTime = 0
+  function animate () {
+    const elapsedTime = clock.getElapsedTime()
+
+    light.position.x = Math.cos(elapsedTime * speed) * widthXZ
+    light.position.z = Math.sin(elapsedTime * speed) * widthXZ
+    light.position.y = Math.sin(elapsedTime * amplitudeY)
+
+    if (elapsedTime - prevTime > 0.015) { 
+      meshes[0].position.copy(light.position)
+      meshes.push(meshes.shift() as THREE.Mesh)
+      prevTime = elapsedTime
+    }
+
+    requestAnimationFrame(animate)
+  }
+  animate()
+
+  return meshes
+}
+
+initScene(props)(({ scene, camera, renderer }) => {
+  camera.position.z = 12
+
+  const planeSize = 10
   const target = new THREE.Vector3(1, -2, 1)
-  const planeSize = 5
   const sphereJumpSpeed = 3
   const shadowOpacityFactor = 0.3
 
@@ -78,6 +110,12 @@ initScene(props)(({ scene, camera, renderer }) => {
   const fakeShadow = mountFakeShadow(scene, target)
 
   mountHemisphereLightWithGUI(scene)
+
+  mountSmoke(scene, 0xebc6f0)
+
+  mountSmoke(scene, 0xcacde3, 5, 4, -5)
+
+  mountSmoke(scene, 0xe3fdc4, 10, 6, 4)
 
   const clock = new THREE.Clock()
   const { x: startX, y: startY, z: startZ } = sphere.position
@@ -99,5 +137,6 @@ initScene(props)(({ scene, camera, renderer }) => {
   }
   animate()
   
+  initSceneControls(gui, scene)
   initHelpersControls(gui, scene)
 })
