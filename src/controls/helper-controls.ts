@@ -6,7 +6,7 @@ export const gridName = 'gridHelper'
 export const polarGridName = 'polarGridHelper'
 
 export const axesInit = (scene: THREE.Scene) => {
-  const helper = new THREE.AxesHelper(20)
+  const helper = new THREE.AxesHelper(75)
   helper.name = axisName
   scene.add(helper)
 }
