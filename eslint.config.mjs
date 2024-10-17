@@ -16,3 +16,4 @@ export default [
   },
   { ignores: ['webpack.config.js', 'tsconfig.json', 'dist/**', 'node_modules/**'] }
 ]
+
