@@ -31,13 +31,13 @@ const createFloor = () => {
   roughnessTexture.repeat.set(10, 10)
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(30, 0.25, 30),
-    new THREE.MeshStandardMaterial({ 
-      color: 0xdddddd, 
+    new THREE.MeshStandardMaterial({
+      color: 0xdddddd,
       map: colorTexture,
       normalMap: normalTexture,
       aoMap: ambientOcclusionTexture,
       aoMapIntensity: 3,
-      roughnessMap: roughnessTexture, 
+      roughnessMap: roughnessTexture,
     })
   )
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
@@ -49,7 +49,7 @@ const createFloor = () => {
 const createWalls = () => {
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(5, 3, 5),
-    new THREE.MeshStandardMaterial({ 
+    new THREE.MeshStandardMaterial({
       color: '#bd2f32',
       map: textureLoader.load('static/textures/bricks/color.jpg'),
       aoMap: textureLoader.load('static/textures/bricks/ambientOcclusion.jpg'),
@@ -65,22 +65,22 @@ const createWalls = () => {
 }
 
 const createRoof = () => {
-  const colorTexture =  textureLoader.load('static/textures/roof/color.jpg')
+  const colorTexture = textureLoader.load('static/textures/roof/color.jpg')
   colorTexture.rotation = Math.PI - 0.03
   colorTexture.repeat.set(13, 5)
   colorTexture.wrapS = THREE.RepeatWrapping
   colorTexture.wrapT = THREE.RepeatWrapping
-  const normalTexture =  textureLoader.load('static/textures/roof/normal.png')
+  const normalTexture = textureLoader.load('static/textures/roof/normal.jpg')
   normalTexture.rotation = Math.PI - 0.03
   normalTexture.repeat.set(13, 5)
   normalTexture.wrapS = THREE.RepeatWrapping
   normalTexture.wrapT = THREE.RepeatWrapping
-  const roughnessTexture =  textureLoader.load('static/textures/roof/roughness.png')
+  const roughnessTexture = textureLoader.load('static/textures/roof/roughness.jpg')
   roughnessTexture.rotation = Math.PI - 0.03
   roughnessTexture.repeat.set(13, 5)
   roughnessTexture.wrapS = THREE.RepeatWrapping
   roughnessTexture.wrapT = THREE.RepeatWrapping
-  const aoTexture =  textureLoader.load('static/textures/roof/ao.jpg')
+  const aoTexture = textureLoader.load('static/textures/roof/ao.jpg')
   aoTexture.rotation = Math.PI - 0.03
   aoTexture.repeat.set(13, 5)
   aoTexture.wrapS = THREE.RepeatWrapping
@@ -88,7 +88,7 @@ const createRoof = () => {
   const mesh = new THREE.Mesh(
     new THREE.ConeGeometry(4.5, 2, 4, 100),
     new THREE.MeshStandardMaterial({
-      color:'#94264f',
+      color: '#94264f',
       map: colorTexture,
       normalMap: normalTexture,
       roughnessMap: roughnessTexture,
@@ -100,12 +100,12 @@ const createRoof = () => {
   mesh.position.set(0, 4, 0)
   mesh.rotation.y = Math.PI * 0.25
   mesh.name = 'roof'
-  return mesh  
+  return mesh
 }
 
 const createDoor = () => {
   const geometry = new THREE.PlaneGeometry(2.5, 2.5, 100, 100)
-  const material = new THREE.MeshStandardMaterial({ 
+  const material = new THREE.MeshStandardMaterial({
     color: '#ff9c9d',
     map: textureLoader.load('./static/textures/door/color.jpg'),
     alphaMap: textureLoader.load('./static/textures/door/alpha.jpg'),
@@ -122,7 +122,7 @@ const createDoor = () => {
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.position.set(0, 1.25, 2.5 + 0.01)
   mesh.name = 'door'
-  return mesh 
+  return mesh
 }
 
 const createDoorLight = () => {
@@ -156,8 +156,8 @@ const createBushes = () => {
 const createGraves = () => {
   const graves: THREE.Group[] = []
   const material = new THREE.MeshLambertMaterial({ color: '#969996' })
-  const geometryBase = new THREE.BoxGeometry(0.4, 0.7, 0.1) 
-  const geometryCover = new THREE.CylinderGeometry(0.2, 0.2, 0.1, undefined, undefined, undefined, undefined,  Math.PI)
+  const geometryBase = new THREE.BoxGeometry(0.4, 0.7, 0.1)
+  const geometryCover = new THREE.CylinderGeometry(0.2, 0.2, 0.1, undefined, undefined, undefined, undefined, Math.PI)
   for (let i = 0; i < 100; i++) {
     // create grave
     const grave = new THREE.Group()
@@ -184,14 +184,14 @@ const createGraves = () => {
 
 const mountLight = (scene: THREE.Scene) => {
   const ambientLight = new THREE.AmbientLight('#b9d5ff', 0.3)
-  scene.add(ambientLight) 
+  scene.add(ambientLight)
   const moonLight = new THREE.DirectionalLight('#b9d5ff', 0.5)
   moonLight.position.set(4, 7, -2)
   moonLight.castShadow = true
   moonLight.shadow.mapSize.width = 512
   moonLight.shadow.mapSize.height = 512
   moonLight.shadow.camera.far = 20
-  scene.add(moonLight) 
+  scene.add(moonLight)
 }
 
 interface SmokeParameters {
@@ -214,14 +214,14 @@ const mountGhost = ({ scene, color = 0xd450e6, frequency = 2, areaXZ = 3, areaY 
 
   const clock = new THREE.Clock()
   let prevTime = 0
-  function animate () {
+  function animate() {
     const elapsedTime = clock.getElapsedTime()
 
     light.position.x = 2 + Math.cos(elapsedTime * speed) * areaXZ
     light.position.y = 2 + Math.abs(Math.sin(elapsedTime * frequency)) * areaY
     light.position.z = 2 + Math.sin(elapsedTime * speed) * areaXZ
 
-    if (elapsedTime - prevTime > 0.015) { 
+    if (elapsedTime - prevTime > 0.015) {
       trail[0].position.copy(light.position)
       trail.push(trail.shift() as THREE.Mesh)
       prevTime = elapsedTime
@@ -237,12 +237,12 @@ initScene(props)(({ scene, camera, renderer }) => {
   camera.position.set(3, 2, 9)
 
   scene.fog = new THREE.Fog(0x262837, 1, 17)
-  
+
   const floor = createFloor()
   scene.add(floor)
-  
+
   const house = new THREE.Group()
-  
+
   const walls = createWalls()
   const roof = createRoof()
   const door = createDoor()
