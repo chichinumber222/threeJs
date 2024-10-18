@@ -18,9 +18,12 @@ const gltfLoader = new GLTFLoader()
 const setupCamera = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitControls) => {
   camera.position.set(3, 2, 9)
   orbitControls?.addEventListener('change', function () {
-    if (camera.position.y < 0.1) {
-      camera.position.y = 0.1
-    }
+    if (camera.position.x > 16) camera.position.x = 16
+    if (camera.position.x < -16) camera.position.x = -16
+    if (camera.position.y > 10) camera.position.y = 10
+    if (camera.position.y < 0.1) camera.position.y = 0.1
+    if (camera.position.z > 16) camera.position.z = 16
+    if (camera.position.z < -16) camera.position.z = -16
   })
 }
 
@@ -317,19 +320,21 @@ const mountModels = (scene: THREE.Scene) => {
   } )
 }
 
-const createSnow = (limitCoordinate: number = 5, vertices: number = 100) => {
+const createStars = (vertices: number = 100) => {
   const material = new THREE.PointsMaterial({
     size: 0.02,
     sizeAttenuation: true,
   })
   const geometry = new THREE.BufferGeometry()
   const positions = []
-  for (let v = 0; v < vertices * 3; v++) {
-    positions.push((Math.random() - 0.5) * 2 * limitCoordinate)
+  for (let i = 0; i < vertices; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 2 * 20 // x
+    positions[i*3 + 1] = (Math.random() + 7) * 1.5 // y
+    positions[i*3 + 2] = (Math.random() - 0.5) * 2 * 20 // z
   }
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3))
-  const snow = new THREE.Points(geometry, material)
-  return snow
+  const stars = new THREE.Points(geometry, material)
+  return stars
 }
 
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
@@ -363,8 +368,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   mountModels(scene)
 
-  const snow = createSnow(15, 10000)
-  scene.add(snow)
+  const stars = createStars(10000)
+  scene.add(stars)
 
   function animate() {
     orbitControls?.update()
