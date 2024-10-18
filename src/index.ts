@@ -3,6 +3,7 @@ import GUI from 'lil-gui'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0x262837),
@@ -11,6 +12,7 @@ const props: InitSceneProps = {
 
 const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
+const gltfLoader = new GLTFLoader()
 
 const createFloor = () => {
   const colorTexture = textureLoader.load('static/textures/grass/color.jpg')
@@ -232,6 +234,77 @@ const mountGhost = ({ scene, color = 0xd450e6, frequency = 2, areaXZ = 3, areaY 
   animate()
 }
 
+const mountModels = (scene: THREE.Scene) => {
+  gltfLoader.load( './static/gltf/Lantern_01_1k.gltf/Lantern_01_1k.gltf', (gltf) => {
+    // light
+    const light = new THREE.PointLight('#fffeba', 0.2)
+    light.position.set(2.8, 1.25, -1)
+    scene.add(light)
+    // fire
+    const fire = new THREE.Mesh(
+      new THREE.SphereGeometry(0.011),
+      new THREE.MeshBasicMaterial({ color: '#fffeba' })
+    )
+    fire.position.set(2.8, 1.177, -1)
+    scene.add(fire)
+    // lamp
+    const lamp = gltf.scene
+    const glass = lamp.getObjectByName('Lantern_01_glass') as THREE.Mesh
+    if (!Array.isArray(glass.material)) {
+      glass.material.transparent = true
+      glass.material.opacity = 0.15
+    }
+    lamp.position.set(2.8, 1.082, -1)
+    scene.add(lamp)
+  }, undefined, function ( error ) {
+    console.error('error light', error)
+  } )
+
+  gltfLoader.load('./static/gltf/plastic_bottle_gallon_1k.gltf/plastic_bottle_gallon_1k.gltf', (gltf) => {
+    const bottle = gltf.scene
+    bottle.scale.set(1.5, 1.5, 1.5)
+    bottle.position.set(2.8, 0.125, -2.1)
+    bottle.castShadow = true
+    scene.add(bottle)
+  }, undefined, function ( error ) {
+    console.error('error bottle', error)
+  } )
+
+  gltfLoader.load('./static/gltf/painted_wooden_table_1k.gltf/painted_wooden_table_1k.gltf', (gltf) => {
+    const table = gltf.scene
+    table.position.set(3.1, 0.125, 0)
+    table.rotation.set(0, Math.PI * 0.5, 0)
+    table.castShadow = true
+    scene.add(table)
+  }, undefined, function ( error ) {
+    console.error('error table', error)
+  } )
+
+  gltfLoader.load('./static/gltf/plastic_monobloc_chair_01_1k.gltf/plastic_monobloc_chair_01_1k.gltf', (gltf) => {
+    const chair = gltf.scene
+    chair.position.set(2.9, 0.125, -1.5)
+    chair.rotation.set(0, Math.PI * 0.5, 0)
+    chair.castShadow = true
+    scene.add(chair)
+  }, undefined, function ( error ) {
+    console.error('error chair', error)
+  } )
+
+  gltfLoader.load('./static/gltf/treasure_chest_1k.gltf/treasure_chest_1k.gltf', (gltf) => {
+    const treasure = gltf.scene
+    // random position
+    const angle = Math.random() * Math.PI * 2
+    const distance = Math.random() * 8 + 6
+    treasure.position.set(Math.sin(angle) * distance, 0.125, Math.cos(angle) * distance)
+    // random rotation
+    const angleMiniY = (Math.random() - 0.5) * Math.PI * 0.25
+    treasure.rotation.set(0, angleMiniY, 0)
+    treasure.castShadow = true
+    scene.add(treasure)
+  }, undefined, function ( error ) {
+    console.error('error treasure', error)
+  } )
+}
 
 initScene(props)(({ scene, camera, renderer }) => {
   camera.position.set(3, 2, 9)
@@ -261,6 +334,8 @@ initScene(props)(({ scene, camera, renderer }) => {
 
   mountGhost({ scene, color: 0xe3fdc4, frequency: 1, areaXZ: 5, areaY: 2, speed: 1 })
   mountGhost({ scene, color: 0xe3fdc4, frequency: 1, areaXZ: 7, areaY: 4, speed: -1 })
+
+  mountModels(scene)
 
   function animate() {
     requestAnimationFrame(animate)
