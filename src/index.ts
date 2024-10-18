@@ -249,7 +249,7 @@ const mountGhost = ({ scene, color = 0xd450e6, frequency = 2, areaXZ = 3, areaY 
 }
 
 const mountModels = (scene: THREE.Scene) => {
-  gltfLoader.load( './static/gltf/Lantern_01_1k.gltf/Lantern_01_1k.gltf', (gltf) => {
+  gltfLoader.load('./static/gltf/Lantern_01_1k.gltf/Lantern_01_1k.gltf', (gltf) => {
     // light
     const light = new THREE.PointLight('#fffeba', 0.2)
     light.position.set(2.8, 1, -1)
@@ -270,9 +270,9 @@ const mountModels = (scene: THREE.Scene) => {
     }
     lamp.position.set(2.8, 0.957, -1)
     scene.add(lamp)
-  }, undefined, function ( error ) {
+  }, undefined, function (error) {
     console.error('error light', error)
-  } )
+  })
 
   gltfLoader.load('./static/gltf/plastic_bottle_gallon_1k.gltf/plastic_bottle_gallon_1k.gltf', (gltf) => {
     const bottle = gltf.scene
@@ -280,9 +280,9 @@ const mountModels = (scene: THREE.Scene) => {
     bottle.position.set(2.8, 0, -2.1)
     bottle.castShadow = true
     scene.add(bottle)
-  }, undefined, function ( error ) {
+  }, undefined, function (error) {
     console.error('error bottle', error)
-  } )
+  })
 
   gltfLoader.load('./static/gltf/painted_wooden_table_1k.gltf/painted_wooden_table_1k.gltf', (gltf) => {
     const table = gltf.scene
@@ -290,9 +290,9 @@ const mountModels = (scene: THREE.Scene) => {
     table.rotation.set(0, Math.PI * 0.5, 0)
     table.castShadow = true
     scene.add(table)
-  }, undefined, function ( error ) {
+  }, undefined, function (error) {
     console.error('error table', error)
-  } )
+  })
 
   gltfLoader.load('./static/gltf/plastic_monobloc_chair_01_1k.gltf/plastic_monobloc_chair_01_1k.gltf', (gltf) => {
     const chair = gltf.scene
@@ -300,9 +300,9 @@ const mountModels = (scene: THREE.Scene) => {
     chair.rotation.set(0, Math.PI * 0.5, 0)
     chair.castShadow = true
     scene.add(chair)
-  }, undefined, function ( error ) {
+  }, undefined, function (error) {
     console.error('error chair', error)
-  } )
+  })
 
   gltfLoader.load('./static/gltf/treasure_chest_1k.gltf/treasure_chest_1k.gltf', (gltf) => {
     const treasure = gltf.scene
@@ -315,24 +315,25 @@ const mountModels = (scene: THREE.Scene) => {
     treasure.rotation.set(0, angleMiniY, 0)
     treasure.castShadow = true
     scene.add(treasure)
-  }, undefined, function ( error ) {
+  }, undefined, function (error) {
     console.error('error treasure', error)
-  } )
+  })
 }
 
 const createStars = (vertices: number = 100) => {
   const material = new THREE.PointsMaterial({
     size: 0.3,
     sizeAttenuation: true,
-    map: textureLoader.load('./static/textures/stars/star_01.png'),
+    alphaMap: textureLoader.load('./static/textures/stars/star_01 2.png'),
+    alphaTest: 0.001, // вообще не рендерит альфа-канал, если прозрачность меньше этого значения. Исправляет соответствующий баг
     transparent: true,
   })
   const geometry = new THREE.BufferGeometry()
   const positions = []
   for (let i = 0; i < vertices; i++) {
-    positions[i*3] = (Math.random() - 0.5) * 2 * 20 // x
-    positions[i*3 + 1] = (Math.random() + 7) * 1.5 // y
-    positions[i*3 + 2] = (Math.random() - 0.5) * 2 * 20 // z
+    positions[i * 3] = (Math.random() - 0.5) * 2 * 20 // x
+    positions[i * 3 + 1] = (Math.random() + 7) * 1.5 // y
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 2 * 20 // z
   }
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3))
   const stars = new THREE.Points(geometry, material)
