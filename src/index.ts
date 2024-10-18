@@ -4,6 +4,7 @@ import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0x262837),
@@ -13,6 +14,15 @@ const props: InitSceneProps = {
 const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 const gltfLoader = new GLTFLoader()
+
+const setupCamera = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitControls) => {
+  camera.position.set(3, 2, 9)
+  orbitControls?.addEventListener('change', function () {
+    if (camera.position.y < 0.1) {
+      camera.position.y = 0.1
+    }
+  })
+}
 
 const createFloor = () => {
   const colorTexture = textureLoader.load('static/textures/grass/color.jpg')
@@ -32,7 +42,7 @@ const createFloor = () => {
   roughnessTexture.wrapT = THREE.RepeatWrapping
   roughnessTexture.repeat.set(10, 10)
   const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(30, 0.25, 30),
+    new THREE.PlaneGeometry(30, 30),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
       map: colorTexture,
@@ -42,6 +52,7 @@ const createFloor = () => {
       roughnessMap: roughnessTexture,
     })
   )
+  mesh.rotation.x = - Math.PI * 0.5
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.receiveShadow = true
   mesh.name = 'floor'
@@ -306,8 +317,23 @@ const mountModels = (scene: THREE.Scene) => {
   } )
 }
 
-initScene(props)(({ scene, camera, renderer }) => {
-  camera.position.set(3, 2, 9)
+const createSnow = (limitCoordinate: number = 5, vertices: number = 100) => {
+  const material = new THREE.PointsMaterial({
+    size: 0.02,
+    sizeAttenuation: true,
+  })
+  const geometry = new THREE.BufferGeometry()
+  const positions = []
+  for (let v = 0; v < vertices * 3; v++) {
+    positions.push((Math.random() - 0.5) * 2 * limitCoordinate)
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3))
+  const snow = new THREE.Points(geometry, material)
+  return snow
+}
+
+initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+  setupCamera(camera, orbitControls)
 
   scene.fog = new THREE.Fog(0x262837, 1, 17)
 
@@ -337,7 +363,11 @@ initScene(props)(({ scene, camera, renderer }) => {
 
   mountModels(scene)
 
+  const snow = createSnow(15, 10000)
+  scene.add(snow)
+
   function animate() {
+    orbitControls?.update()
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
     stats.update()
