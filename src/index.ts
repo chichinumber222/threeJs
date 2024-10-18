@@ -252,14 +252,14 @@ const mountModels = (scene: THREE.Scene) => {
   gltfLoader.load( './static/gltf/Lantern_01_1k.gltf/Lantern_01_1k.gltf', (gltf) => {
     // light
     const light = new THREE.PointLight('#fffeba', 0.2)
-    light.position.set(2.8, 1.25, -1)
+    light.position.set(2.8, 1, -1)
     scene.add(light)
     // fire
     const fire = new THREE.Mesh(
       new THREE.SphereGeometry(0.011),
       new THREE.MeshBasicMaterial({ color: '#fffeba' })
     )
-    fire.position.set(2.8, 1.177, -1)
+    fire.position.set(2.8, 1.052, -1)
     scene.add(fire)
     // lamp
     const lamp = gltf.scene
@@ -268,7 +268,7 @@ const mountModels = (scene: THREE.Scene) => {
       glass.material.transparent = true
       glass.material.opacity = 0.15
     }
-    lamp.position.set(2.8, 1.082, -1)
+    lamp.position.set(2.8, 0.957, -1)
     scene.add(lamp)
   }, undefined, function ( error ) {
     console.error('error light', error)
@@ -277,7 +277,7 @@ const mountModels = (scene: THREE.Scene) => {
   gltfLoader.load('./static/gltf/plastic_bottle_gallon_1k.gltf/plastic_bottle_gallon_1k.gltf', (gltf) => {
     const bottle = gltf.scene
     bottle.scale.set(1.5, 1.5, 1.5)
-    bottle.position.set(2.8, 0.125, -2.1)
+    bottle.position.set(2.8, 0, -2.1)
     bottle.castShadow = true
     scene.add(bottle)
   }, undefined, function ( error ) {
@@ -286,7 +286,7 @@ const mountModels = (scene: THREE.Scene) => {
 
   gltfLoader.load('./static/gltf/painted_wooden_table_1k.gltf/painted_wooden_table_1k.gltf', (gltf) => {
     const table = gltf.scene
-    table.position.set(3.1, 0.125, 0)
+    table.position.set(3.1, 0, 0)
     table.rotation.set(0, Math.PI * 0.5, 0)
     table.castShadow = true
     scene.add(table)
@@ -296,7 +296,7 @@ const mountModels = (scene: THREE.Scene) => {
 
   gltfLoader.load('./static/gltf/plastic_monobloc_chair_01_1k.gltf/plastic_monobloc_chair_01_1k.gltf', (gltf) => {
     const chair = gltf.scene
-    chair.position.set(2.9, 0.125, -1.5)
+    chair.position.set(2.9, 0, -1.5)
     chair.rotation.set(0, Math.PI * 0.5, 0)
     chair.castShadow = true
     scene.add(chair)
@@ -309,7 +309,7 @@ const mountModels = (scene: THREE.Scene) => {
     // random position
     const angle = Math.random() * Math.PI * 2
     const distance = Math.random() * 8 + 6
-    treasure.position.set(Math.sin(angle) * distance, 0.125, Math.cos(angle) * distance)
+    treasure.position.set(Math.sin(angle) * distance, 0, Math.cos(angle) * distance)
     // random rotation
     const angleMiniY = (Math.random() - 0.5) * Math.PI * 0.25
     treasure.rotation.set(0, angleMiniY, 0)
@@ -322,8 +322,10 @@ const mountModels = (scene: THREE.Scene) => {
 
 const createStars = (vertices: number = 100) => {
   const material = new THREE.PointsMaterial({
-    size: 0.02,
+    size: 0.3,
     sizeAttenuation: true,
+    map: textureLoader.load('./static/textures/stars/star_01.png'),
+    transparent: true,
   })
   const geometry = new THREE.BufferGeometry()
   const positions = []
@@ -368,7 +370,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   mountModels(scene)
 
-  const stars = createStars(10000)
+  const stars = createStars(3000)
   scene.add(stars)
 
   function animate() {
