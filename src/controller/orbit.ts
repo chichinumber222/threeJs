@@ -12,3 +12,5 @@ export const initOrbitControls = (camera: THREE.Camera, renderer: THREE.Renderer
 
   return controller
 }
+
+export { OrbitControls }
