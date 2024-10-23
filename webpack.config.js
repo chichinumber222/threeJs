@@ -4,9 +4,18 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.ts',
+  entry: {
+    index: './src/index.ts',
+    index3DText: './src/index3DText.ts',
+    indexHouseWithGhosts: './src/indexHouseWithGhosts.ts',
+    indexTwoCamerasInMotion: './src/indexTwoCamerasInMotion.ts',
+    indexShadowBaking: './src/indexShadowBaking.ts',
+    indexRayCaster: './src/indexRayCaster.ts',
+    indexControls: './src/indexControls.ts',
+    indexGalaxy: './src/indexGalaxy.ts',
+  },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/'
   },
@@ -39,12 +48,49 @@ module.exports = {
   devServer: {
     static: path.join(__dirname, 'dist'),
     hot: true,
-    open: true
+    open: true,
+    historyApiFallback: false,  // В MPA не нужен fallback для SPA
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html', // Указывает на исходный HTML-файл
-      filename: 'index.html'         // Название выходного HTML-файла
+      template: './src/index.html',
+      filename: 'index.html',
+      chunks: ['index']       
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/index3DText.html',
+      filename: 'index3DText.html',
+      chunks: ['index3DText']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexHouseWithGhosts.html',
+      filename: 'indexHouseWithGhosts.html',
+      chunks: ['indexHouseWithGhosts']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexTwoCamerasInMotion.html',
+      filename: 'indexTwoCamerasInMotion.html',
+      chunks: ['indexTwoCamerasInMotion']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexShadowBaking.html',
+      filename: 'indexShadowBaking.html',
+      chunks: ['indexShadowBaking']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexRayCaster.html',
+      filename: 'indexRayCaster.html',
+      chunks: ['indexRayCaster']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexControls.html',
+      filename: 'indexControls.html',
+      chunks: ['indexControls']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexGalaxy.html',
+      filename: 'indexGalaxy.html',
+      chunks: ['indexGalaxy']
     }),
     new CopyWebpackPlugin({
       patterns: [

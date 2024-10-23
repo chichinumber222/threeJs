@@ -140,3 +140,4 @@ initScene(props)(({ scene, camera, renderer }) => {
   initSceneControls(gui, scene)
   initHelpersControls(gui, scene)
 })
+
