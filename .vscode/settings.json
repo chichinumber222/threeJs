@@ -4,5 +4,5 @@
     "notebook.defaultFormatter": "dbaeumer.vscode-eslint",
     "editor.formatOnSave": true,
     "notebook.formatOnSave.enabled": true,
-    "files.autoSave": "afterDelay"
+    // "files.autoSave": "afterDelay"
 }
