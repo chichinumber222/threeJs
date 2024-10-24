@@ -8,18 +8,34 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
             overflow: hidden;
+        }
+        .links {
+            position: fixed;
+            left: 50%;
+            transform: translate(-50%);
+            z-index: 2;
+            color: #4da270;
+            font-size: 20px;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
 
 <body>
-    <a id="house" href="./indexHouseWithGhosts.html">House</a>
-    <a id="3d-text" href="./index3DText.html">3d text</a>
-    <a id="two-cameras" href="./indexTwoCamerasInMotion.html">two-cameras</a>
-    <a id="ray-caster" href="./indexRayCaster.html">ray-caster</a>
-    <a id="galaxy" href="./indexGalaxy.html">galaxy</a>
-    <a id="shadow-baking" href="./indexShadowBaking.html">shadow-baking</a>
-    <a id="controls" href="./indexControls.html">controls</a>
+    <section class="links">
+        <a class="link" href="./indexHouseWithGhosts.html">House</a>
+        <a href="./index3DText.html">3d text</a>
+        <a href="./indexTwoCamerasInMotion.html">two-cameras</a>
+        <a href="./indexRayCaster.html">ray-caster</a>
+        <a href="./indexGalaxy.html">galaxy</a>
+        <a href="./indexShadowBaking.html">shadow-baking</a>
+        <a href="./indexControls.html">controls</a>
+    </section>
 </body>
 </html>
