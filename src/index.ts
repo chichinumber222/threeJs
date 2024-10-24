@@ -6,13 +6,14 @@ import { initHelpersControls } from './controls/helper-controls'
 
 const props: InitSceneProps = {
   disableDefaultControls: true,
+  canvasElement: document.getElementsByTagName('canvas')[0]
 }
 
 const gui = new GUI()
 
 const mountCube = (scene: THREE.Scene) => {
   const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
-  const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57', clearcoat: 1, clearcoatRoughness: 0.2 })
+  const material = new THREE.MeshPhysicalMaterial({ color: '#3a7e57' })
   const cube = new THREE.Mesh(geometry, material)
   cube.castShadow = true
   cube.name = 'cube'

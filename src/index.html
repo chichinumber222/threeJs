@@ -2,40 +2,73 @@
 <html>
 
 <head>
-    <title>Стартовая</title>
+    <title>Menu</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <style>
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
         }
-        .links {
-            position: fixed;
-            left: 50%;
-            transform: translate(-50%);
-            z-index: 2;
-            color: #4da270;
-            font-size: 20px;
+        .section {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 100vh;
+            border-bottom: 1px solid #ffeded;
+            padding-left: 10%;
+            padding-right: 10%;
         }
-        canvas {
+        .section:last-of-type {
+            border-bottom: none;
+        }
+        .webgl {
             position: fixed;
             top: 0;
             left: 0;
+        }
+        .link {
+            color: #ffeded;
+            font-family: 'Cabin', sans-serif;
+            opacity: 0.8;
+            font-size: 7vmin; /* Если окно 1000px на 800px, то возьмет 7% от 800px*/
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+        .link:hover {
+            opacity: 1;
         }
     </style>
 </head>
 
 <body>
-    <section class="links">
+    <canvas class="webgl"></canvas>
+    <section class="section">
         <a class="link" href="./indexHouseWithGhosts.html">House</a>
-        <a href="./index3DText.html">3d text</a>
-        <a href="./indexTwoCamerasInMotion.html">two-cameras</a>
-        <a href="./indexRayCaster.html">ray-caster</a>
-        <a href="./indexGalaxy.html">galaxy</a>
-        <a href="./indexShadowBaking.html">shadow-baking</a>
-        <a href="./indexControls.html">controls</a>
+    </section>
+
+    <section class="section">
+        <a class="link" href="./index3DText.html">3d text</a>     
+    </section>
+
+    <section class="section">
+        <a class="link" href="./indexTwoCamerasInMotion.html">two-cameras</a>
+    </section>
+
+    <section class="section">
+        <a class="link" href="./indexRayCaster.html">ray-caster</a>
+    </section>
+
+    <section class="section">
+        <a class="link" href="./indexGalaxy.html">galaxy</a>
+    </section>
+
+    <section class="section">
+        <a class="link" href="./indexShadowBaking.html">shadow-baking</a>
+    </section>
+
+    <section class="section">
+        <a class="link" href="./indexControls.html">controls</a>
     </section>
 </body>
 </html>

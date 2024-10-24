@@ -49,7 +49,7 @@ module.exports = {
     static: path.join(__dirname, 'dist'),
     hot: true,
     open: true,
-    historyApiFallback: false,  // В MPA не нужен fallback для SPA
+    historyApiFallback: false,  // В MPA не нужен fallback для SPA. Настройка включает режим, при котором любой адрес в url обрабатывается как начальная страница (что и нужно для SPA, где роутинг делается на клиенте)
   },
   plugins: [
     new HtmlWebpackPlugin({

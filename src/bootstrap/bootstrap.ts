@@ -11,6 +11,7 @@ export interface Props {
     disableDefaultLights?: boolean
     disableShadowsOnDefaultLights?: boolean
     disableDefaultControls?: boolean
+    canvasElement?: HTMLCanvasElement
 }
 
 export interface Params {
@@ -24,7 +25,7 @@ export interface Fn {
     (args: Params): void
 }
 
-export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDefaultLights, disableShadowsOnDefaultLights, disableDefaultControls }: Props) => {
+export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDefaultLights, disableShadowsOnDefaultLights, disableDefaultControls, canvasElement }: Props) => {
   return (fn: Fn) => {
     // basic scene setup
     const scene = new THREE.Scene()
@@ -36,7 +37,7 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDe
     }
     // setup camera and basic renderer
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, ...(canvasElement ? { canvas: canvasElement } : {}) })
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.shadowMap.enabled = !disableShadows
     renderer.shadowMap.type = THREE.VSMShadowMap
@@ -46,7 +47,9 @@ export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDe
     onResize(camera, renderer)
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    document.body.appendChild(renderer.domElement)
+    if (!canvasElement) {
+      document.body.appendChild(renderer.domElement)
+    }
     // init orbit controls
     let orbitControls 
     if (!disableDefaultControls) {

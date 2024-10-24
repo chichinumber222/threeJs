@@ -92,6 +92,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     (gltf) => {
       horseModel = gltf.scene
       horseModel.scale.set(3, 3, 3)
+      horseModel.position.set(0, -0.3, 0)
       scene.add(horseModel)
     }
   )

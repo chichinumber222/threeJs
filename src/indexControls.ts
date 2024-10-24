@@ -68,6 +68,7 @@ import { initHelpersControls } from './controls/helper-controls'
 import { foreverPlane } from './bootstrap/floor'
 import { initSceneControls } from './controls/scene-controls'
 import { initPointerControls } from './controller/pointer'
+
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xffffff),
   disableDefaultControls: true,
@@ -81,7 +82,6 @@ const gui = new GUI({ container: guiContainer, title: 'Control Panel' });
     event.stopPropagation()
   })
 })
-
 
 const mountCube = (scene: THREE.Scene) => {
   const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
