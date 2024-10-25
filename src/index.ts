@@ -1,7 +1,5 @@
 import * as THREE from 'three'
-import GUI from 'lil-gui'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
-import { initHelpersControls } from './controls/helper-controls'
 import { onChangeCursor, onChangeScroll } from './utils/update-coord'
 
 const props: InitSceneProps = {
@@ -9,7 +7,6 @@ const props: InitSceneProps = {
   canvasElement: document.getElementsByTagName('canvas')[0]
 }
 
-const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 
 initScene(props)(({ scene, camera, renderer }) => {
@@ -59,7 +56,5 @@ initScene(props)(({ scene, camera, renderer }) => {
     renderer.render(scene, camera)
   }
   animate()
-
-  initHelpersControls(gui, scene)
 })
 
