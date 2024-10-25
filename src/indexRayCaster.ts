@@ -73,7 +73,7 @@ import GUI from "lil-gui"
 import { initScene, Props as InitSceneProps } from "./bootstrap/bootstrap"
 import { stats } from "./utils/stats"
 import { initHelpersControls } from "./controls/helper-controls"
-import { onChangeCursor } from "./utils/update-cursor-coord"
+import { onChangeCursor } from "./utils/update-coord"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 const props: InitSceneProps = {
