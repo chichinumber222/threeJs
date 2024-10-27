@@ -14,6 +14,7 @@ const props: InitSceneProps = {
 const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 
+const container = document.getElementById('container')!
 const sectionsCount = document.getElementsByClassName('section').length
 const sectionUnitHeight = 5.5
 
@@ -97,14 +98,22 @@ initScene(props)(({ scene, camera, renderer }) => {
   const particles = getParticles()
   scene.add(particles)
 
-  const scrolls = { x: window.scrollX, y: window.scrollY }
+  const scrolls = { x: container?.scrollLeft, y: container?.scrollTop }
   let currentSection = 0
-  window.addEventListener('scroll', () => {
+  container?.addEventListener('scroll', () => {
+    console.log('scroll event start')
+    console.table([
+      {
+        scrollY: window.scrollY,
+        scrollYContainer: container?.scrollTop
+      }
+    ])
+
     // scroll
-    scrolls.x = window.scrollX
-    scrolls.y = window.scrollY
+    scrolls.x = container.scrollLeft
+    scrolls.y = container.scrollTop
     // animate section
-    const newSection = Math.round(window.scrollY / window.innerHeight)
+    const newSection = Math.round(container.scrollTop / container.clientHeight)
     if (newSection !== currentSection) {
       currentSection = newSection
       gsap.to(meshes[currentSection].rotation, {
@@ -117,9 +126,9 @@ initScene(props)(({ scene, camera, renderer }) => {
   })
 
   const cursor = { x: 0, y: 0}
-  window.addEventListener('mousemove', (event: MouseEvent) => {
-    cursor.x = (event.clientX / window.innerWidth) * 2 - 1
-    cursor.y = - (event.clientY / window.innerHeight) * 2 + 1
+  container.addEventListener('mousemove', (event: MouseEvent) => {
+    cursor.x = (event.clientX / container.clientWidth) * 2 - 1
+    cursor.y = - (event.clientY / container.clientHeight) * 2 + 1
   })
 
   mountLight(scene)
@@ -136,7 +145,7 @@ initScene(props)(({ scene, camera, renderer }) => {
       mesh.rotation.y += deltaTime * 0.15
     })
     // camera scroll
-    const scrollDistance = (-sectionUnitHeight * scrolls.y) / window.innerHeight
+    const scrollDistance = (-sectionUnitHeight * scrolls.y) / container.clientHeight
     camera.position.y = scrollDistance
     // parallax effect
     const distanceX = cursor.x * 0.3
@@ -153,4 +162,3 @@ initScene(props)(({ scene, camera, renderer }) => {
 
   initHelpersControls(gui, scene)
 })
-

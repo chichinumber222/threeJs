@@ -9,12 +9,17 @@
         body {
             margin: 0;
             padding: 0;
+            overflow: hidden;
+        }
+        #container {
+            height: 100vh; /* Занимаем всю высоту видимой области */
+            overflow-y: auto; /* Включаем вертикальную прокрутку */
         }
         .section {
             position: relative;
             display: flex;
             align-items: center;
-            height: 100vh;
+            height: calc(100vh - 1px);
             border-bottom: 1px solid #ffffff;
             padding-left: 10%;
             padding-right: 10%;
@@ -44,32 +49,34 @@
 
 <body>
     <canvas class="webgl"></canvas>
-    <section class="section">
-        <a class="link" href="./indexHouseWithGhosts.html">House with ghosts</a>
-    </section>
-
-    <section class="section">
-        <a class="link" href="./index3DText.html">3d text</a>     
-    </section>
-
-    <section class="section">
-        <a class="link" href="./indexTwoCamerasInMotion.html">two-cameras</a>
-    </section>
-
-    <section class="section">
-        <a class="link" href="./indexRayCaster.html">ray-caster</a>
-    </section>
-
-    <section class="section">
-        <a class="link" href="./indexGalaxy.html">galaxy</a>
-    </section>
-
-    <section class="section">
-        <a class="link" href="./indexShadowBaking.html">shadow-baking</a>
-    </section>
-
-    <section class="section">
-        <a class="link" href="./indexControls.html">controls</a>
-    </section>
+    <div id="container">
+        <section class="section">
+            <a class="link" href="./indexHouseWithGhosts.html">House with ghosts</a>
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./index3DText.html">3d text</a>     
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./indexTwoCamerasInMotion.html">two-cameras</a>
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./indexRayCaster.html">ray-caster</a>
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./indexGalaxy.html">galaxy</a>
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./indexShadowBaking.html">shadow-baking</a>
+        </section>
+    
+        <section class="section">
+            <a class="link" href="./indexControls.html">controls</a>
+        </section>
+    </div>
 </body>
 </html>
