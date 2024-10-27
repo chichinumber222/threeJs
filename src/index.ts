@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { createMeshesArrayBasedAnother } from './utils/create-meshes-array-based-another'
 import gsap from 'gsap'
+import GUI from "lil-gui"
+import { initHelpersControls } from './controls/helper-controls'
 
 const props: InitSceneProps = {
   disableDefaultControls: true,
@@ -9,6 +11,7 @@ const props: InitSceneProps = {
   disableDefaultLights: true,
 }
 
+const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 
 const sectionsCount = document.getElementsByClassName('section').length
@@ -147,5 +150,7 @@ initScene(props)(({ scene, camera, renderer }) => {
     renderer.render(scene, camera)
   }
   animate()
+
+  initHelpersControls(gui, scene)
 })
 
