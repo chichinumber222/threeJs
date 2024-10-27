@@ -2,8 +2,6 @@ import * as THREE from 'three'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { createMeshesArrayBasedAnother } from './utils/create-meshes-array-based-another'
 import gsap from 'gsap'
-import GUI from "lil-gui"
-import { initHelpersControls } from './controls/helper-controls'
 
 const props: InitSceneProps = {
   disableDefaultControls: true,
@@ -11,10 +9,9 @@ const props: InitSceneProps = {
   disableDefaultLights: true,
 }
 
-const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 
-const container = document.getElementById('container')!
+const contentContainer = document.getElementById('container')!
 const sectionsCount = document.getElementsByClassName('section').length
 const sectionUnitHeight = 5.5
 
@@ -98,22 +95,14 @@ initScene(props)(({ scene, camera, renderer }) => {
   const particles = getParticles()
   scene.add(particles)
 
-  const scrolls = { x: container?.scrollLeft, y: container?.scrollTop }
+  const scrolls = { x: contentContainer.scrollLeft, y: contentContainer.scrollTop }
   let currentSection = 0
-  container?.addEventListener('scroll', () => {
-    console.log('scroll event start')
-    console.table([
-      {
-        scrollY: window.scrollY,
-        scrollYContainer: container?.scrollTop
-      }
-    ])
-
+  contentContainer.addEventListener('scroll', () => {
     // scroll
-    scrolls.x = container.scrollLeft
-    scrolls.y = container.scrollTop
+    scrolls.x = contentContainer.scrollLeft
+    scrolls.y = contentContainer.scrollTop
     // animate section
-    const newSection = Math.round(container.scrollTop / container.clientHeight)
+    const newSection = Math.round(scrolls.y / contentContainer.clientHeight)
     if (newSection !== currentSection) {
       currentSection = newSection
       gsap.to(meshes[currentSection].rotation, {
@@ -126,9 +115,9 @@ initScene(props)(({ scene, camera, renderer }) => {
   })
 
   const cursor = { x: 0, y: 0}
-  container.addEventListener('mousemove', (event: MouseEvent) => {
-    cursor.x = (event.clientX / container.clientWidth) * 2 - 1
-    cursor.y = - (event.clientY / container.clientHeight) * 2 + 1
+  contentContainer.addEventListener('mousemove', (event: MouseEvent) => {
+    cursor.x = (event.clientX / contentContainer.clientWidth) * 2 - 1
+    cursor.y = - (event.clientY / contentContainer.clientHeight) * 2 + 1
   })
 
   mountLight(scene)
@@ -145,7 +134,7 @@ initScene(props)(({ scene, camera, renderer }) => {
       mesh.rotation.y += deltaTime * 0.15
     })
     // camera scroll
-    const scrollDistance = (-sectionUnitHeight * scrolls.y) / container.clientHeight
+    const scrollDistance = (-sectionUnitHeight * scrolls.y) / contentContainer.clientHeight
     camera.position.y = scrollDistance
     // parallax effect
     const distanceX = cursor.x * 0.3
@@ -159,6 +148,4 @@ initScene(props)(({ scene, camera, renderer }) => {
     renderer.render(scene, camera)
   }
   animate()
-
-  initHelpersControls(gui, scene)
 })
