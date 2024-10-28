@@ -11,7 +11,7 @@ export interface Props {
     disableDefaultLights?: boolean
     disableShadowsOnDefaultLights?: boolean
     disableDefaultControls?: boolean
-    canvasElement?: HTMLCanvasElement
+    canvasElement?: HTMLCanvasElement 
 }
 
 export interface Params {
@@ -25,7 +25,15 @@ export interface Fn {
     (args: Params): void
 }
 
-export const initScene = ({ backgroundColor, fogColor, disableShadows, disableDefaultLights, disableShadowsOnDefaultLights, disableDefaultControls, canvasElement }: Props) => {
+export const initScene = ({ 
+  backgroundColor, 
+  fogColor, 
+  disableShadows, 
+  disableDefaultLights, 
+  disableShadowsOnDefaultLights, 
+  disableDefaultControls, 
+  canvasElement, 
+}: Props) => {
   return (fn: Fn) => {
     // basic scene setup
     const scene = new THREE.Scene()

@@ -60,7 +60,7 @@ const mountHemisphereLightWithGUI = (scene: THREE.Scene) => {
   guiFolder.add(light, 'intensity', 0, 5, 0.01)
   guiFolder.add(helper, 'visible').name('helper visible')
   guiFolder.close()
-  
+
   return light
 }
 
@@ -75,14 +75,14 @@ const mountSmoke = (scene: THREE.Scene, color: number = 0xd450e6, amplitudeY: nu
 
   const clock = new THREE.Clock()
   let prevTime = 0
-  function animate () {
+  function animate() {
     const elapsedTime = clock.getElapsedTime()
 
     light.position.x = Math.cos(elapsedTime * speed) * widthXZ
     light.position.z = Math.sin(elapsedTime * speed) * widthXZ
     light.position.y = Math.sin(elapsedTime * amplitudeY)
 
-    if (elapsedTime - prevTime > 0.015) { 
+    if (elapsedTime - prevTime > 0.015) {
       meshes[0].position.copy(light.position)
       meshes.push(meshes.shift() as THREE.Mesh)
       prevTime = elapsedTime
@@ -103,7 +103,7 @@ initScene(props)(({ scene, camera, renderer }) => {
   const sphereJumpSpeed = 3
   const shadowOpacityFactor = 0.3
 
-  foreverPlane(scene, planeSize, target)
+  foreverPlane(scene, { size: planeSize, position: target })
 
   const sphere = mountSphere(scene, target)
 
@@ -136,7 +136,7 @@ initScene(props)(({ scene, camera, renderer }) => {
     stats.update()
   }
   animate()
-  
+
   initSceneControls(gui, scene)
   initHelpersControls(gui, scene)
 })

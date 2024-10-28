@@ -56,7 +56,7 @@ const initDragControls = (scene: THREE.Scene, camera: THREE.Camera, renderer: TH
     }
     if (object instanceof THREE.Mesh) {
       object.material.emissive.set(0x000000)
-    } 
+    }
   })
   return controls
 }
@@ -65,7 +65,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.set(-7, 2, 5)
   orbitControls?.update()
 
-  foreverFloor(scene, 10)
+  foreverFloor(scene, { size: 10 })
 
   const cube = mountCube(scene)
 
@@ -83,7 +83,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   //   const currentTime = Date.now()
   //   const deltaTime = currentTime - time
   //   time = currentTime
-    
+
   //   cube.rotation.y += 0.001 * deltaTime
 
   //   requestAnimationFrame(animate)
@@ -96,9 +96,9 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   //*
 
   //* Чтобы на различным компьютерах с разным fps одинаковая скорость соблюдалась 2 вариант
-  const clock  = new THREE.Clock()
+  const clock = new THREE.Clock()
   function animate() {
-  
+
     cube.rotation.y = clock.getElapsedTime() * Math.PI * 2
 
     requestAnimationFrame(animate)

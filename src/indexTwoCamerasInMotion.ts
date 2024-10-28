@@ -43,7 +43,7 @@ const getExternalCamera = () => {
 const gui = new GUI()
 
 initScene(props)(({ camera, scene, renderer, orbitControls }) => {
-  foreverFloor(scene, 10)
+  foreverFloor(scene, { size: 10 })
 
   const cube = getCubeWithEdges()
   const cubeClone = getMeshClone(cube)
@@ -76,7 +76,7 @@ initScene(props)(({ camera, scene, renderer, orbitControls }) => {
 
     renderer.render(scene, currentCamera)
     window.requestAnimationFrame(animate)
-    orbitControls?.update() 
+    orbitControls?.update()
   }
   animate()
 

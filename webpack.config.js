@@ -13,6 +13,7 @@ module.exports = {
     indexRayCaster: './src/indexRayCaster.ts',
     indexControls: './src/indexControls.ts',
     indexGalaxy: './src/indexGalaxy.ts',
+    indexPhysics: './src/indexPhysics.ts'
   },
   output: {
     filename: '[name].bundle.js',
@@ -91,6 +92,11 @@ module.exports = {
       template: './src/indexGalaxy.html',
       filename: 'indexGalaxy.html',
       chunks: ['indexGalaxy']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexPhysics.html',
+      filename: 'indexPhysics.html',
+      chunks: ['indexPhysics']
     }),
     new CopyWebpackPlugin({
       patterns: [

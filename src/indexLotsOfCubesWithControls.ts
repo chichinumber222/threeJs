@@ -15,7 +15,7 @@ const props: InitSceneProps = {
 const gui = new GUI()
 
 initScene(props)(({ camera, scene, renderer, orbitControls }) => {
-  foreverFloor(scene, 10)
+  foreverFloor(scene, { size: 10 })
 
   camera.position.set(-7, 2, 5)
   orbitControls?.update()

@@ -38,7 +38,7 @@
 // initScene(props)(({ scene, camera, renderer }) => {
 //   camera.position.z = 3
 
-//   foreverFloor(scene, 10)
+//   foreverFloor(scene, { size: 10 })
 
 //   const cube = mountCube(scene)
 
@@ -78,7 +78,7 @@ const guiContainer = document.getElementById('GUI-output') || undefined
 const gui = new GUI({ container: guiContainer, title: 'Control Panel' });
 // пока так
 ['click', 'dblclick', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((eventType) => {
-  gui.domElement.addEventListener(eventType, function(event) {
+  gui.domElement.addEventListener(eventType, function (event) {
     event.stopPropagation()
   })
 })
@@ -95,7 +95,7 @@ const mountCube = (scene: THREE.Scene) => {
 
 initScene(props)(({ scene, camera, renderer }) => {
   camera.position.z = 3
- 
+
   foreverPlane(scene)
 
   mountCube(scene)

@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cannon": "^0.6.2",
     "date-fns": "^3.6.0",
     "gsap": "^3.5.1",
     "lodash": "^4.17.21",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@types/cannon": "^0.1.13",
     "@types/dat.gui": "^0.7.13",
     "@types/lodash": "^4.17.7",
     "@types/node": "^22.5.5",
