@@ -44,7 +44,7 @@ export const initScene = ({
       scene.fog = new THREE.Fog(fogColor, 0.0025, 50)
     }
     // setup camera and basic renderer
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200)
     const renderer = new THREE.WebGLRenderer({ antialias: true, ...(canvasElement ? { canvas: canvasElement } : {}) })
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.shadowMap.enabled = !disableShadows
