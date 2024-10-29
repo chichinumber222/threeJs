@@ -5,6 +5,7 @@ import { stats } from "./utils/stats"
 import { initHelpersControls } from "./controls/helper-controls"
 import * as CANNON from "cannon"
 import { convertVector } from './utils/convert-vec3-vector3'
+import { useCameraCoordinates } from "./utils/camera-coordinates"
 
 interface ActiveItem {
   body: CANNON.Body
@@ -34,6 +35,8 @@ const useShell = (scene: THREE.Scene, world: CANNON.World) => {
     mesh.geometry?.dispose()
     if (!Array.isArray(mesh.material)) {
       mesh.material?.dispose()
+    } else {
+      mesh.material.forEach((material) => material.dispose())
     }
     scene.remove(mesh)
     // physics clear
@@ -64,6 +67,24 @@ const useShell = (scene: THREE.Scene, world: CANNON.World) => {
   return [create, reset] as const
 }
 
+const useBoundingBox = (size?: number) => {
+  const s = size ?? 100
+  const currentBox = new THREE.Box3(
+    new THREE.Vector3(-s, -s, -s),
+    new THREE.Vector3(s, s, s)
+  )
+  
+  const isContainsPoint = (point: THREE.Vector3) => {
+    return currentBox.containsPoint(point)
+  }
+
+  const isContainsBox = (box: THREE.Box3) => {
+    return currentBox.containsBox(box)
+  }
+
+  return [isContainsPoint, isContainsBox] as const
+}
+
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.z = 9
 
@@ -72,17 +93,14 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   const activeItems: ActiveItem[] = []
 
   const [createShell, resetShell] = useShell(scene, world)
+  const [getCameraPos, getCameraDir] = useCameraCoordinates(camera)
 
   window.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.code === "Space") {
-      const cameraPosition = camera.position
-      const cameraDirection = camera.getWorldDirection(new THREE.Vector3())
-      cameraDirection.set(cameraDirection.x * 1500, cameraDirection.y * 1500, cameraDirection.z * 1500)
-
       const sphere = createShell(
         {
-          position: convertVector(cameraPosition),
-          direction: convertVector(cameraDirection)
+          position: convertVector(getCameraPos()),
+          direction: convertVector(getCameraDir().multiplyScalar(1500))
         }
       )
       activeItems.push(sphere)
@@ -91,7 +109,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   let delta = 0, prevTime = 0
   const clock = new THREE.Clock()
-  const squareLimit = 100
+  const [ isContainsPoint ] = useBoundingBox()
   function animate() {
     // times
     const elapsedTime = clock.getElapsedTime()
@@ -101,12 +119,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     // update items positions/rotations
     world.step(1 / 60, delta, 3)
     for (let i = activeItems.length - 1; i >= 0; i--) {
-      const { body, mesh } = activeItems[i]
-      if (
-        mesh.position.x < -squareLimit / 2 || mesh.position.x > squareLimit / 2 ||
-        mesh.position.y < -squareLimit / 2 || mesh.position.y > squareLimit / 2 ||
-        mesh.position.z < -squareLimit / 2 || mesh.position.z > squareLimit / 2
-      ) {
+      const { body, mesh } = activeItems[i]   
+      if (!isContainsPoint(mesh.position)) {
         resetShell(activeItems[i])
         activeItems.splice(i, 1)
         continue
