@@ -7,13 +7,14 @@ import * as CANNON from "cannon"
 import { convertVector } from './utils/convert-vec3-vector3'
 import { useCameraCoordinates } from "./utils/camera-coordinates"
 
-interface ActiveItem {
+interface ActiveObject {
   body: CANNON.Body
   mesh: THREE.Mesh
 }
 
 const sceneProps: InitSceneProps = {
   backgroundColor: new THREE.Color('#303030'),
+  disableDefaultLights: true,
 }
 
 const gui = new GUI()
@@ -90,9 +91,16 @@ const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
   world.addBody(body)
 }
 
-const createBlock = (position: CANNON.Vec3, { width, height, depth }: Record<'width'| 'height' | 'depth', number>): ActiveItem => {
+const createBlock = (position: CANNON.Vec3, { width, height, depth }: Record<'width'| 'height' | 'depth', number>): ActiveObject => {
   const renderGeometry = new THREE.BoxGeometry(width, height, depth)
-  const renderMaterial = new THREE.MeshMatcapMaterial()
+  const renderMaterial = new THREE.MeshStandardMaterial({
+    map: textureLoader.load('static/textures/block/color.jpg'),
+    normalMap: textureLoader.load('static/textures/block/normal.jpg'),
+    aoMap: textureLoader.load('static/textures/block/ao.jpg'),
+    aoMapIntensity: 5,
+    roughnessMap: textureLoader.load('static/textures/block/roughness.jpg'),
+    roughness:20
+  })
   const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
   mesh.castShadow = true
   mesh.position.copy(position)
@@ -111,10 +119,10 @@ const createBlock = (position: CANNON.Vec3, { width, height, depth }: Record<'wi
   }
 }
 
-const createBlocks = (scene: THREE.Scene, world: CANNON.World) => {
+const createBlockWall = (scene: THREE.Scene, world: CANNON.World) => {
   const rowsCount = 7, columnsCount = 7
   const blockWidth = 2, blockHeight = 1, blockDepth = 1
-  const blocks: ActiveItem[] = []
+  const blocks: ActiveObject[] = []
   for (let r = 0; r < rowsCount; r++) {
     const y = blockHeight * r + (blockHeight / 2) + 0.1
     for (let c = 0; c < columnsCount; c++) {
@@ -131,25 +139,12 @@ const createBlocks = (scene: THREE.Scene, world: CANNON.World) => {
   return blocks
 }
 
-const useShell = (scene: THREE.Scene, world: CANNON.World) => {
+const useObjects = (scene: THREE.Scene, world: CANNON.World) => {
   const renderGeometry = new THREE.SphereGeometry(1, 20, 20)
   const renderMaterial = new THREE.MeshStandardMaterial({ color: '#998e8e', metalness: 0.3, roughness: 0.1 })
   const physicShape = new CANNON.Sphere(1)
-
-  const reset = ({ body, mesh }: ActiveItem) => {
-    // render clear
-    mesh.geometry?.dispose()
-    if (!Array.isArray(mesh.material)) {
-      mesh.material?.dispose()
-    } else {
-      mesh.material.forEach((material) => material.dispose())
-    }
-    scene.remove(mesh)
-    // physics clear
-    world.remove(body)
-  }
-
-  const create = ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
+  
+  const createShell = ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
     const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
     mesh.position.copy(position)
     mesh.castShadow = true
@@ -170,7 +165,20 @@ const useShell = (scene: THREE.Scene, world: CANNON.World) => {
     }
   }
 
-  return [create, reset] as const
+  const resetObject = ({ body, mesh }: ActiveObject) => {
+    // render clear
+    mesh.geometry?.dispose()
+    if (!Array.isArray(mesh.material)) {
+      mesh.material?.dispose()
+    } else {
+      mesh.material.forEach((material) => material.dispose())
+    }
+    scene.remove(mesh)
+    // physics clear
+    world.remove(body)
+  }
+
+  return [createShell, resetObject] as const
 }
 
 const useBoundingBox = (size?: number) => {
@@ -191,21 +199,44 @@ const useBoundingBox = (size?: number) => {
   return [isContainsPoint, isContainsBox] as const
 }
 
+const mountLights = (scene: THREE.Scene) => {
+  const ambientLight = new THREE.AmbientLight(0xffffff, 2)
+  scene.add(ambientLight) 
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 2)
+  directionalLight.position.set(3, 20, 5)
+  directionalLight.castShadow = true
+  directionalLight.shadow.camera.near = 0.1
+  directionalLight.shadow.camera.far = 50
+  directionalLight.shadow.camera.right = 30
+  directionalLight.shadow.camera.left = -30
+  directionalLight.shadow.camera.top = 30
+  directionalLight.shadow.camera.bottom = -30
+  directionalLight.shadow.mapSize.width = 2048
+  directionalLight.shadow.mapSize.height = 2048
+  directionalLight.shadow.radius = 2
+  directionalLight.shadow.bias = -0.00005
+    
+  scene.add(directionalLight)
+}
+
+
 initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.set(0, 2, 15)
-
+  
   const world = initPhysicsWorld()
-
-  const activeItems: ActiveItem[] = []
 
   mountFloor(scene, world)
 
-  const blocks = createBlocks(scene, world)
-  activeItems.push(...blocks)
+  mountLights(scene)
 
-  const [createShell, resetShell] = useShell(scene, world)
+  const activeObjects: ActiveObject[] = []
+
+  const blocks = createBlockWall(scene, world)
+  activeObjects.push(...blocks)
+
+  const [createShell, resetObject] = useObjects(scene, world)
   const [getCameraPos, getCameraDir] = useCameraCoordinates(camera)
-  
 
   window.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.code === "Space") {
@@ -215,8 +246,17 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
           direction: convertVector(getCameraDir().multiplyScalar(1500))
         }
       )
-      activeItems.push(sphere)
+      activeObjects.push(sphere)
     }
+  })
+  document.getElementById('shootBtn')?.addEventListener('click', () => {
+    const sphere = createShell(
+      {
+        position: convertVector(getCameraPos()),
+        direction: convertVector(getCameraDir().multiplyScalar(1500))
+      }
+    )
+    activeObjects.push(sphere)
   })
 
   let delta = 0, prevTime = 0
@@ -230,11 +270,11 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
 
     // update items positions/rotations
     world.step(1 / 60, delta, 3)
-    for (let i = activeItems.length - 1; i >= 0; i--) {
-      const { body, mesh } = activeItems[i]   
+    for (let i = activeObjects.length - 1; i >= 0; i--) { // reverse loop for dynamically removing elements from an array (not changes indexes)
+      const { body, mesh } = activeObjects[i]   
       if (!isContainsPoint(mesh.position)) {
-        resetShell(activeItems[i])
-        activeItems.splice(i, 1)
+        resetObject(activeObjects[i])
+        activeObjects.splice(i, 1)
         continue
       }
       mesh.position.copy(body.position)

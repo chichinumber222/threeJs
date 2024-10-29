@@ -207,6 +207,7 @@ const mountLight = (scene: THREE.Scene) => {
   moonLight.shadow.mapSize.width = 512
   moonLight.shadow.mapSize.height = 512
   moonLight.shadow.camera.far = 20
+  moonLight.shadow.bias = -0.00005
   scene.add(moonLight)
 }
 

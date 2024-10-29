@@ -15,9 +15,33 @@
                 top: 0;
                 left: 0;
             }
+            #shootBtn {
+                position: fixed;
+                right: 10%;
+                bottom: 10%;
+                width: 50px;
+                height: 50px;
+                color:blanchedalmond;
+                border: 2px solid blanchedalmond;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                user-select: none;
+            }
+            #message {
+                position: fixed;
+                bottom: 6%;
+                left: 50%;
+                transform: translate(-50%);
+                color: #e5cec9;
+            }
         </style>
     </head>
     <body>
         <canvas class="webgl"></canvas>
+        <div id="shootBtn">shoot</div>
+        <div id="message">Press Space key or Shoot button</div>
     </body>
 </html>
