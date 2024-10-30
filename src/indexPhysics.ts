@@ -1,8 +1,6 @@
 import * as THREE from "three"
-import GUI from "lil-gui"
 import { initScene, Props as InitSceneProps } from "./bootstrap/bootstrap"
 import { stats } from "./utils/stats"
-import { initHelpersControls } from "./controls/helper-controls"
 import * as CANNON from "cannon"
 import { convertVector } from './utils/convert-vec3-vector3'
 import { useCameraCoordinates } from "./utils/camera-coordinates"
@@ -17,7 +15,6 @@ const sceneProps: InitSceneProps = {
   disableDefaultLights: true,
 }
 
-const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
 
 // physic material refference
@@ -287,6 +284,4 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     requestAnimationFrame(animate)
   }
   animate()
-
-  initHelpersControls(gui, scene)
 })
