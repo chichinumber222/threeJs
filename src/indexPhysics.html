@@ -15,14 +15,11 @@
                 top: 0;
                 left: 0;
             }
-            #shootBtn {
-                position: fixed;
-                right: 10%;
-                bottom: 15%;
-                width: 4.5vmax;
-                height: 4.5vmax;
+            .button {
+                width: 5vmax;
+                height: 5vmax;
                 color:blanchedalmond;
-                font-size: 1.2vmax;
+                font-size: 1.3vmax;
                 border: 2px solid blanchedalmond;
                 border-radius: 50%;
                 display: flex;
@@ -31,6 +28,16 @@
                 cursor: pointer;
                 user-select: none;
                 -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            }
+            .location_left {
+                position: fixed;
+                left: 10%;
+                bottom: 15%;
+            }
+            .location_right {
+                position: fixed;
+                right: 10%;
+                bottom: 15%;
             }
             #message {
                 position: fixed;
@@ -46,7 +53,7 @@
                 #gesture {
                     position: fixed;
                     right: 3%;
-                    top: 5%;
+                    top: 2%;
                     width: 15vmax;
                 }
                 .pc-message {
@@ -90,12 +97,13 @@
     </head>
     <body>
         <canvas class="webgl"></canvas>
-        <div id="shootBtn">shoot</div>
+        <div class="button location_right ">shoot</div>
         <div id="message">Press&nbsp;<span class="pc-message">Space key or&nbsp;</span>Shoot button</div>
         <img id="gesture" class="mobile" src="./static/hands.png" alt="gesture">
         <div id="crosshair">
             <div id="crosshair_vertical"></div>
             <div id="crosshair_horizontal"></div>
         </div>
+        <div class="button location_left">sound</div>
     </body>
 </html>

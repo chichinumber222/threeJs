@@ -17,6 +17,20 @@ const sceneProps: InitSceneProps = {
 
 const textureLoader = new THREE.TextureLoader()
 
+const initMusic = () => {
+  const music = new Audio("./static/music/Five Nights at Freddy's - 8 Bit lofi Hip Hop.mp3")
+  music.loop = true
+  music.volume = 0.02
+  document.querySelector('.button.location_left')?.addEventListener('click', () => {
+    if (music.paused) {
+      music.play()
+      return
+    }
+    music.pause()
+  })
+}
+initMusic()
+
 // physic material refference
 const objectPhysicMaterial = new CANNON.Material('object')
 const floorPhysicMaterial = new CANNON.Material('plane')
@@ -246,7 +260,7 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
       activeObjects.push(sphere)
     }
   })
-  document.getElementById('shootBtn')?.addEventListener('click', () => {
+  document.querySelector('.button.location_right')?.addEventListener('click', () => {
     const sphere = createShell(
       {
         position: convertVector(getCameraPos()),
