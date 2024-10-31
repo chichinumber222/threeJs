@@ -4,6 +4,7 @@ import { stats } from "./utils/stats"
 import * as CANNON from "cannon"
 import { convertVector } from './utils/convert-vec3-vector3'
 import { useCameraCoordinates } from "./utils/camera-coordinates"
+import * as _ from 'lodash'
 
 interface ActiveObject {
   body: CANNON.Body
@@ -15,8 +16,6 @@ const sceneProps: InitSceneProps = {
   disableDefaultLights: true,
   canvasElement: document.getElementsByTagName('canvas')[0],
 }
-
-const textureLoader = new THREE.TextureLoader()
 
 const initMusic = () => {
   const music = new Audio("./static/music/Five Nights at Freddy's - 8 Bit lofi Hip Hop.mp3")
@@ -31,6 +30,23 @@ const initMusic = () => {
   })
 }
 initMusic()
+
+const textureLoader = new THREE.TextureLoader()
+// texture load
+//* floor
+const floorTextures = {
+  color: textureLoader.load('static/textures/grass/color.jpg'),
+  normal: textureLoader.load('static/textures/grass/normal.jpg'),
+  ao: textureLoader.load('static/textures/grass/ambientOcclusion.jpg'),
+  rough: textureLoader.load('static/textures/grass/roughness.jpg')
+}
+//* block
+const blockTextures = {
+  color: textureLoader.load('static/textures/block/color.jpg'),
+  normal: textureLoader.load('static/textures/block/normal.jpg'),
+  ao: textureLoader.load('static/textures/block/ao.jpg'),
+  rough: textureLoader.load('static/textures/block/roughness.jpg')
+}
 
 // physic material refference
 const objectPhysicMaterial = new CANNON.Material('object')
@@ -64,31 +80,28 @@ const initPhysicsWorld = () => {
 }
 
 const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
-  const colorTexture = textureLoader.load('static/textures/grass/color.jpg')
-  colorTexture.wrapS = THREE.RepeatWrapping
-  colorTexture.wrapT = THREE.RepeatWrapping
-  colorTexture.repeat.set(10, 10)
-  const normalTexture = textureLoader.load('static/textures/grass/normal.jpg')
-  normalTexture.wrapS = THREE.RepeatWrapping
-  normalTexture.wrapT = THREE.RepeatWrapping
-  normalTexture.repeat.set(10, 10)
-  const ambientOcclusionTexture = textureLoader.load('static/textures/grass/ambientOcclusion.jpg')
-  ambientOcclusionTexture.wrapS = THREE.RepeatWrapping
-  ambientOcclusionTexture.wrapT = THREE.RepeatWrapping
-  ambientOcclusionTexture.repeat.set(10, 10)
-  const roughnessTexture = textureLoader.load('static/textures/grass/roughness.jpg')
-  roughnessTexture.wrapS = THREE.RepeatWrapping
-  roughnessTexture.wrapT = THREE.RepeatWrapping
-  roughnessTexture.repeat.set(10, 10)
+  const { color, normal, ao, rough } = floorTextures
+  color.wrapS = THREE.RepeatWrapping
+  color.wrapT = THREE.RepeatWrapping
+  color.repeat.set(10, 10)
+  normal.wrapS = THREE.RepeatWrapping
+  normal.wrapT = THREE.RepeatWrapping
+  normal.repeat.set(10, 10)
+  ao.wrapS = THREE.RepeatWrapping
+  ao.wrapT = THREE.RepeatWrapping
+  ao.repeat.set(10, 10)
+  rough.wrapS = THREE.RepeatWrapping
+  rough.wrapT = THREE.RepeatWrapping
+  rough.repeat.set(10, 10)
 
   const renderGeometry = new THREE.BoxGeometry(20, 0.25, 20)
   const renderMaterial =  new THREE.MeshStandardMaterial({ 
-    color: 0xdddddd,
-    map: colorTexture,
-    normalMap: normalTexture,
-    aoMap: ambientOcclusionTexture,
+    color: 0x8d9862,
+    map: color,
+    normalMap: normal,
+    aoMap: ao,
     aoMapIntensity: 3,
-    roughnessMap: roughnessTexture
+    roughnessMap: rough
   })
   const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
   mesh.receiveShadow = true
@@ -103,46 +116,51 @@ const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
   world.addBody(body)
 }
 
-const createBlock = (position: CANNON.Vec3, { width, height, depth }: Record<'width'| 'height' | 'depth', number>): ActiveObject => {
+const useBlock = ({ width, height, depth }: Record<'width'| 'height' | 'depth', number>) => {
+  const { color, normal, ao, rough } = blockTextures
   const renderGeometry = new THREE.BoxGeometry(width, height, depth)
   const renderMaterial = new THREE.MeshStandardMaterial({
-    map: textureLoader.load('static/textures/block/color.jpg'),
-    normalMap: textureLoader.load('static/textures/block/normal.jpg'),
-    aoMap: textureLoader.load('static/textures/block/ao.jpg'),
+    map: color,
+    normalMap: normal,
+    aoMap: ao,
     aoMapIntensity: 5,
-    roughnessMap: textureLoader.load('static/textures/block/roughness.jpg'),
+    roughnessMap: rough,
     roughness:20
   })
-  const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
-  mesh.castShadow = true
-  mesh.position.copy(position)
-  
-  const physicShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
-  const body = new CANNON.Body({
-    mass: 0.5,
-    shape: physicShape,
-    material: objectPhysicMaterial
-  })
-  body.position.copy(position)
 
-  return {
-    mesh,
-    body
+  const physicShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
+
+  return (position: CANNON.Vec3) => {
+    const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
+    mesh.castShadow = true
+    mesh.position.copy(position)
+
+    const body = new CANNON.Body({
+      mass: 0.5,
+      shape: physicShape,
+      material: objectPhysicMaterial
+    })
+    body.position.copy(position)
+
+    return {
+      mesh,
+      body
+    }
   }
 }
 
 const createBlockWall = (scene: THREE.Scene, world: CANNON.World) => {
   const rowsCount = 7, columnsCount = 7
   const blockWidth = 2, blockHeight = 1, blockDepth = 1
+  const createBlock = useBlock({ width: blockWidth, height: blockHeight, depth: blockDepth })
   const blocks: ActiveObject[] = []
+  const positionVec3 = new CANNON.Vec3(0, 0, 0)
   for (let r = 0; r < rowsCount; r++) {
     const y = blockHeight * r + (blockHeight / 2) + 0.1
     for (let c = 0; c < columnsCount; c++) {
       const x = (-1) * (columnsCount / 2) * blockWidth + blockWidth * c + 0.1
-      const block = createBlock(
-        new CANNON.Vec3(x, y, 0), 
-        { width: blockWidth, height: blockHeight, depth: blockDepth}
-      )
+      positionVec3.set(x, y, 0)
+      const block = createBlock(positionVec3)
       blocks.push(block)
       scene.add(block.mesh)
       world.addBody(block.body)
@@ -151,12 +169,12 @@ const createBlockWall = (scene: THREE.Scene, world: CANNON.World) => {
   return blocks
 }
 
-const useObjects = (scene: THREE.Scene, world: CANNON.World) => {
+const useShell = (scene: THREE.Scene, world: CANNON.World) => {
   const renderGeometry = new THREE.SphereGeometry(1, 20, 20)
   const renderMaterial = new THREE.MeshStandardMaterial({ color: '#998e8e', metalness: 0.3, roughness: 0.1 })
   const physicShape = new CANNON.Sphere(1)
   
-  const createShell = ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
+  return  ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
     const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
     mesh.position.copy(position)
     mesh.castShadow = true
@@ -176,8 +194,10 @@ const useObjects = (scene: THREE.Scene, world: CANNON.World) => {
       body,
     }
   }
+}
 
-  const resetObject = ({ body, mesh }: ActiveObject) => {
+const useReset = (scene: THREE.Scene, world: CANNON.World) => {
+  return ({ body, mesh }: ActiveObject) => {
     // render clear
     mesh.geometry?.dispose()
     if (!Array.isArray(mesh.material)) {
@@ -189,8 +209,6 @@ const useObjects = (scene: THREE.Scene, world: CANNON.World) => {
     // physics clear
     world.remove(body)
   }
-
-  return [createShell, resetObject] as const
 }
 
 const useBoundingBox = (size?: number) => {
@@ -199,11 +217,9 @@ const useBoundingBox = (size?: number) => {
     new THREE.Vector3(-s, -s, -s),
     new THREE.Vector3(s, s, s)
   ) 
-
   const isContainsPoint = (point: THREE.Vector3) => {
     return currentBox.containsPoint(point)
   }
-
   const isContainsBox = (box: THREE.Box3) => {
     return currentBox.containsBox(box)
   }
@@ -239,10 +255,11 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
 
   const activeObjects: ActiveObject[] = []
 
-  const [createShell, resetObject] = useObjects(scene, world)
+  const createShell = useShell(scene, world)
+  const resetObject = useReset(scene, world)
   const [getCameraPos, getCameraDir] = useCameraCoordinates(camera)
 
-  const runShell = () => {
+  const runShell = _.throttle(() => {
     const shell = createShell(
       {
         position: convertVector(getCameraPos()),
@@ -250,13 +267,11 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
       }
     )
     activeObjects.push(shell)
-  }
+  }, 100)
   window.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.code === "Space") runShell()
   })
-  document.querySelector('.button.location_right')?.addEventListener('click', () => {
-    runShell()
-  })
+  document.querySelector('.button.location_right')?.addEventListener('click', runShell)
 
   let isGameGoing = false
   const runGame = () => {
@@ -279,9 +294,14 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     pausedTime: 0,
     pauseCount: 10
   }
-  const congratuateElements = {
-    container: document.getElementById('congratulation')!,
-    count: document.querySelector('.countdown .count')!
+  const mutableElements = {
+    congratulation: {
+      container: document.getElementById('congratulation')!,
+      count: document.querySelector('.countdown .count')!
+    },
+    crosshair: {
+      container: document.getElementById('crosshair')!,
+    },
   }
   const clock = new THREE.Clock()
   const [ isContainsPoint ] = useBoundingBox()
@@ -293,7 +313,8 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
 
     // update items positions/rotations
     world.step(1 / 60, times.delta, 3)
-    for (let i = activeObjects.length - 1; i >= 0; i--) { // reverse loop for dynamically removing elements from an array (not changes indexes)
+    //* reverse loop for dynamically removing elements from an array (not changes indexes)
+    for (let i = activeObjects.length - 1; i >= 0; i--) {
       const { body, mesh } = activeObjects[i]   
       if (!isContainsPoint(mesh.position)) {
         resetObject(activeObjects[i])
@@ -308,13 +329,15 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     if (activeObjects.length === 0 && isGameGoing === true) {
       isGameGoing = false
       times.pausedTime = elapsedTime
-      congratuateElements.container.style.display = 'flex'
+      mutableElements.crosshair.container.style.display = 'none'
+      mutableElements.congratulation.container.style.display = 'flex'
     }
     if (isGameGoing === false) {
       times.deltaPaused = elapsedTime - times.pausedTime
-      congratuateElements.count.innerHTML = `${Math.round(times.pauseCount - times.deltaPaused)}`
+      mutableElements.congratulation.count.innerHTML = `${Math.round(times.pauseCount - times.deltaPaused)}`
       if (times.deltaPaused > times.pauseCount) {
-        congratuateElements.container.style.display = 'none'
+        mutableElements.congratulation.container.style.display = 'none'
+        mutableElements.crosshair.container.style.display = 'flex'
         times.pausedTime = 0
         times.deltaPaused = 0
         runGame()
