@@ -1,0 +1,148 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.webgl {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.button {
+    width: 5vmax;
+    height: 5vmax;
+    color:blanchedalmond;
+    font-size: 1.3vmax;
+    border: 2px solid blanchedalmond;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    appearance: none;        /* Убирает стандартный стиль кнопки */
+    background: none;        /* Убирает стандартный фон */
+}
+
+.location_left {
+    position: fixed;
+    left: 10%;
+    bottom: 15%;
+}
+
+.location_right {
+    position: fixed;
+    right: 10%;
+    bottom: 15%;
+}
+
+#message {
+    position: fixed;
+    bottom: 5%;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    color: #e5cec9;
+    font-size: 20px;
+}
+
+/* mobile device */
+@media (pointer: coarse) {
+    #gesture {
+        position: fixed;
+        right: 3%;
+        top: 2%;
+        width: 15vmax;
+    }
+    .pc-message {
+        display: none;
+    }
+}
+
+/* pc device */
+@media (pointer: fine) {
+    #gesture {
+        display: none;
+    }
+    .pc-message {
+        display: inline;
+    }
+}
+
+#crosshair {
+    position: fixed;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid red;
+    opacity: 0.8;
+}
+
+#crosshair_vertical {
+    position: absolute;
+    width: 3px;
+    height: 13px;
+}
+
+#crosshair_horizontal {
+    position: absolute;
+    width: 13px;
+    height: 3px;
+}
+
+#crosshair_vertical, #crosshair_horizontal {
+    background-color: rgb(232, 123, 71);
+}
+
+#congratulation {
+    display: none;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.congrats {
+    font-size: 2.3vmax;
+    font-weight: bold;
+    color: #FFD700;
+    text-align: center;
+    animation: scaleUp 1s ease-in-out infinite alternate;
+}
+
+.countdown {
+    font-size: 1.2vmax;
+    font-weight: bold;
+    text-align: center;
+    color: #ffffff;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: rgb(255, 174, 0);
+    animation: fall 3s linear infinite;
+    opacity: 0.7;
+    border-radius: 50%;
+}
+
+@keyframes scaleUp {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); color: #FF69B4; }
+}
+
+@keyframes fall {
+    0% { transform: translateY(-100vh); opacity: 1; }
+    100% { transform: translateY(100vh); opacity: 0; }
+}

@@ -13,6 +13,7 @@ interface ActiveObject {
 const sceneProps: InitSceneProps = {
   backgroundColor: new THREE.Color('#303030'),
   disableDefaultLights: true,
+  canvasElement: document.getElementsByTagName('canvas')[0],
 }
 
 const textureLoader = new THREE.TextureLoader()
@@ -231,56 +232,67 @@ const mountLights = (scene: THREE.Scene) => {
   scene.add(directionalLight)
 }
 
-
 initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
-  camera.position.set(0, 2, 15)
-  
   const world = initPhysicsWorld()
-
   mountFloor(scene, world)
-
   mountLights(scene)
 
   const activeObjects: ActiveObject[] = []
 
-  const blocks = createBlockWall(scene, world)
-  activeObjects.push(...blocks)
-
   const [createShell, resetObject] = useObjects(scene, world)
   const [getCameraPos, getCameraDir] = useCameraCoordinates(camera)
 
-  window.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.code === "Space") {
-      const sphere = createShell(
-        {
-          position: convertVector(getCameraPos()),
-          direction: convertVector(getCameraDir().multiplyScalar(1500))
-        }
-      )
-      activeObjects.push(sphere)
-    }
-  })
-  document.querySelector('.button.location_right')?.addEventListener('click', () => {
-    const sphere = createShell(
+  const runShell = () => {
+    const shell = createShell(
       {
         position: convertVector(getCameraPos()),
         direction: convertVector(getCameraDir().multiplyScalar(1500))
       }
     )
-    activeObjects.push(sphere)
+    activeObjects.push(shell)
+  }
+  window.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.code === "Space") runShell()
+  })
+  document.querySelector('.button.location_right')?.addEventListener('click', () => {
+    runShell()
   })
 
-  let delta = 0, prevTime = 0
+  let isGameGoing = false
+  const runGame = () => {
+    if (activeObjects.length) {
+      activeObjects.forEach((object) => resetObject(object))
+      activeObjects.length = 0
+    }
+    orbitControls?.reset()
+    camera.position.set(0, 2, 15)
+    const blocks = createBlockWall(scene, world)
+    activeObjects.push(...blocks)
+    isGameGoing = true
+  }
+  runGame()
+
+  const times = {
+    delta: 0,
+    prevTime: 0,
+    deltaPaused: 0,
+    pausedTime: 0,
+    pauseCount: 10
+  }
+  const congratuateElements = {
+    container: document.getElementById('congratulation')!,
+    count: document.querySelector('.countdown .count')!
+  }
   const clock = new THREE.Clock()
   const [ isContainsPoint ] = useBoundingBox()
   function animate() {
     // times
     const elapsedTime = clock.getElapsedTime()
-    delta = elapsedTime - prevTime
-    prevTime = elapsedTime
+    times.delta = elapsedTime - times.prevTime
+    times.prevTime = elapsedTime
 
     // update items positions/rotations
-    world.step(1 / 60, delta, 3)
+    world.step(1 / 60, times.delta, 3)
     for (let i = activeObjects.length - 1; i >= 0; i--) { // reverse loop for dynamically removing elements from an array (not changes indexes)
       const { body, mesh } = activeObjects[i]   
       if (!isContainsPoint(mesh.position)) {
@@ -290,6 +302,24 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
       }
       mesh.position.copy(body.position)
       mesh.quaternion.copy(body.quaternion)
+    }
+
+    // win process
+    if (activeObjects.length === 0 && isGameGoing === true) {
+      isGameGoing = false
+      times.pausedTime = elapsedTime
+      congratuateElements.container.style.display = 'flex'
+    }
+    if (isGameGoing === false) {
+      times.deltaPaused = elapsedTime - times.pausedTime
+      congratuateElements.count.innerHTML = `${Math.round(times.pauseCount - times.deltaPaused)}`
+      if (times.deltaPaused > times.pauseCount) {
+        congratuateElements.container.style.display = 'none'
+        times.pausedTime = 0
+        times.deltaPaused = 0
+        runGame()
+        isGameGoing = true
+      }
     }
 
     renderer.render(scene, camera)

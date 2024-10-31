@@ -39,7 +39,7 @@ module.exports = {
       {
         test: /\.(png|jpg|jpeg|gif|svg)$/i,
         type: 'asset/resource',
-      }
+      },
     ]
   },
   resolve: {
@@ -104,6 +104,10 @@ module.exports = {
           from: path.resolve(__dirname, 'src/static'),  // папка с изображениями
           to: path.resolve(__dirname, 'dist/static'),   // выходная директория
         },
+        {
+          from: path.resolve(__dirname, 'src/styles'),
+          to: path.resolve(__dirname, 'dist/styles')
+        }
       ],
     }),
   ],
