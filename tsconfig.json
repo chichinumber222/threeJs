@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES6",                 // Версия ECMAScript, в которую будет скомпилирован TypeScript
-    "module": "commonjs",            // Модульная система
+    "target": "ESNext",                 // Версия ECMAScript, в которую будет скомпилирован TypeScript
+    "module": "ESNext",            // Модульная система
+    "moduleResolution": "Node",
     "strict": true,                  // Включение строгого режима
     "esModuleInterop": true,         // Поддержка импорта CommonJS модулей в модули ES
     "skipLibCheck": true,            // Пропустить проверку типов в библиотеках

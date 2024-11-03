@@ -17,6 +17,8 @@ const sceneProps: InitSceneProps = {
   canvasElement: document.getElementsByTagName('canvas')[0],
 }
 
+console.log('import.meta.url', import.meta.url)
+
 const initMusic = () => {
   const music = new Audio("./static/music/Five Nights at Freddy's - 8 Bit lofi Hip Hop.mp3")
   music.loop = true
@@ -95,7 +97,7 @@ const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
   rough.repeat.set(10, 10)
 
   const renderGeometry = new THREE.BoxGeometry(20, 0.25, 20)
-  const renderMaterial =  new THREE.MeshStandardMaterial({ 
+  const renderMaterial = new THREE.MeshStandardMaterial({
     color: 0x8d9862,
     map: color,
     normalMap: normal,
@@ -116,7 +118,7 @@ const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
   world.addBody(body)
 }
 
-const useBlock = ({ width, height, depth }: Record<'width'| 'height' | 'depth', number>) => {
+const useBlock = ({ width, height, depth }: Record<'width' | 'height' | 'depth', number>) => {
   const { color, normal, ao, rough } = blockTextures
   const renderGeometry = new THREE.BoxGeometry(width, height, depth)
   const renderMaterial = new THREE.MeshStandardMaterial({
@@ -125,7 +127,7 @@ const useBlock = ({ width, height, depth }: Record<'width'| 'height' | 'depth', 
     aoMap: ao,
     aoMapIntensity: 5,
     roughnessMap: rough,
-    roughness:20
+    roughness: 20
   })
 
   const physicShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, depth / 2))
@@ -173,8 +175,8 @@ const useShell = (scene: THREE.Scene, world: CANNON.World) => {
   const renderGeometry = new THREE.SphereGeometry(1, 20, 20)
   const renderMaterial = new THREE.MeshStandardMaterial({ color: '#998e8e', metalness: 0.3, roughness: 0.1 })
   const physicShape = new CANNON.Sphere(1)
-  
-  return  ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
+
+  return ({ position, direction }: Record<'position' | 'direction', CANNON.Vec3>) => {
     const mesh = new THREE.Mesh(renderGeometry, renderMaterial)
     mesh.position.copy(position)
     mesh.castShadow = true
@@ -216,7 +218,7 @@ const useBoundingBox = (size?: number) => {
   const currentBox = new THREE.Box3(
     new THREE.Vector3(-s, -s, -s),
     new THREE.Vector3(s, s, s)
-  ) 
+  )
   const isContainsPoint = (point: THREE.Vector3) => {
     return currentBox.containsPoint(point)
   }
@@ -229,7 +231,7 @@ const useBoundingBox = (size?: number) => {
 
 const mountLights = (scene: THREE.Scene) => {
   const ambientLight = new THREE.AmbientLight(0xffffff, 2)
-  scene.add(ambientLight) 
+  scene.add(ambientLight)
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 2)
   directionalLight.position.set(3, 20, 5)
@@ -244,7 +246,7 @@ const mountLights = (scene: THREE.Scene) => {
   directionalLight.shadow.mapSize.height = 2048
   directionalLight.shadow.radius = 2
   directionalLight.shadow.bias = -0.00005
-    
+
   scene.add(directionalLight)
 }
 
@@ -304,7 +306,7 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     },
   }
   const clock = new THREE.Clock()
-  const [ isContainsPoint ] = useBoundingBox()
+  const [isContainsPoint] = useBoundingBox()
   function animate() {
     // times
     const elapsedTime = clock.getElapsedTime()
@@ -315,7 +317,7 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     world.step(1 / 60, times.delta, 3)
     //* reverse loop for dynamically removing elements from an array (not changes indexes)
     for (let i = activeObjects.length - 1; i >= 0; i--) {
-      const { body, mesh } = activeObjects[i]   
+      const { body, mesh } = activeObjects[i]
       if (!isContainsPoint(mesh.position)) {
         resetObject(activeObjects[i])
         activeObjects.splice(i, 1)

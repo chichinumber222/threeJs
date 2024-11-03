@@ -13,7 +13,7 @@ module.exports = {
     indexRayCaster: './src/indexRayCaster.ts',
     indexControls: './src/indexControls.ts',
     indexGalaxy: './src/indexGalaxy.ts',
-    indexPhysics: './src/indexPhysics.ts'
+    indexPhysics: './src/indexPhysics.ts',
   },
   output: {
     filename: '[name].bundle.js',

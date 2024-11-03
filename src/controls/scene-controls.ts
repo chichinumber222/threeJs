@@ -98,7 +98,7 @@ const initFogControl = (parentFolder: GUI, fog: THREE.Fog | THREE.FogExp2) => {
   }
   fogFolder.onChange((event) => {
     /* @ts-expect-error: Unreachable code error */
-    fog?.[event.property] = event.value
+    fog[event.property] = event.value
   })
   fogFolder.close()
 }
