@@ -381,8 +381,6 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
       render.quaternion.copy(physic.quaternion)
     }
 
-    console.log('activeObjects', activeObjects)
-
     // win process
     if (activeObjects.length === 0 && isGameGoing === true) {
       isGameGoing = false
