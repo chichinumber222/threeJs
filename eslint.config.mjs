@@ -14,6 +14,6 @@ export default [
       "indent": ["error", 2],
     }
   },
-  { ignores: ['webpack.config.js', 'tsconfig.json', 'dist/**', 'node_modules/**'] }
+  { ignores: ['webpack.config.js', 'tsconfig.json', 'dist/**', 'node_modules/**', 'src/static/libs/**'] }
 ]
 

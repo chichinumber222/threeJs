@@ -4,11 +4,13 @@ import { stats } from "./utils/stats"
 import * as CANNON from "cannon"
 import { convertVector } from './utils/convert-vec3-vector3'
 import { useCameraCoordinates } from "./utils/camera-coordinates"
+import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import * as _ from 'lodash'
 
 interface ActiveObject {
-  body: CANNON.Body
-  mesh: THREE.Mesh
+  physic: CANNON.Body
+  render: THREE.Group<THREE.Object3DEventMap> | THREE.Mesh
 }
 
 const sceneProps: InitSceneProps = {
@@ -40,8 +42,8 @@ const floorTextures = {
   ao: textureLoader.load('static/textures/grass/ambientOcclusion.jpg'),
   rough: textureLoader.load('static/textures/grass/roughness.jpg')
 }
-//* block
-const blockTextures = {
+//* objects
+const objectsTextures = {
   color: textureLoader.load('static/textures/block/color.jpg'),
   normal: textureLoader.load('static/textures/block/normal.jpg'),
   ao: textureLoader.load('static/textures/block/ao.jpg'),
@@ -68,6 +70,17 @@ const objectObjectContactMaterial = new CANNON.ContactMaterial(
     restitution: 0.5,
   }
 )
+
+const gltfLoader = new GLTFLoader()
+const drakoLoader = new DRACOLoader()
+drakoLoader.setDecoderPath('./static/libs/draco/')
+gltfLoader.setDRACOLoader(drakoLoader)
+// model load
+const modelLoadPromise = new Promise<GLTF>((resolve) => {
+  gltfLoader.load('./static/gltf/hamburger/hambergerFinal.glb', (gltf) => {
+    resolve(gltf)
+  })
+})
 
 const initPhysicsWorld = () => {
   const world = new CANNON.World()
@@ -116,8 +129,41 @@ const mountFloor = (scene: THREE.Scene, world: CANNON.World) => {
   world.addBody(body)
 }
 
+const createModel = (scene: THREE.Scene, world: CANNON.World, activeObjects: ActiveObject[]) => {
+  modelLoadPromise.then((gltf) => {
+    const model = new THREE.Group().copy(gltf.scene)
+    model.scale.set(0.3, 0.3, 0.3)
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const startPosition = new CANNON.Vec3(
+      0, 
+      (boundingBox.max.y - boundingBox.min.y) / 2 + 0.26,
+      6,
+    )
+    model.position.copy(startPosition)
+    scene.add(model)
+
+    const physicShape = new CANNON.Box(new CANNON.Vec3(
+      (boundingBox!.max.x - boundingBox!.min.x) / 2,
+      (boundingBox!.max.y - boundingBox!.min.y) / 2,
+      (boundingBox!.max.z - boundingBox!.min.z) / 2,
+    ))
+    const physicBody = new CANNON.Body({
+      shape: physicShape,
+      mass: 1.5,
+      material: objectPhysicMaterial
+    })
+    physicBody.position.copy(startPosition)
+    world.addBody(physicBody)
+
+    activeObjects.push({
+      render: model,
+      physic: physicBody,
+    })
+  })
+}
+
 const useBlock = ({ width, height, depth }: Record<'width'| 'height' | 'depth', number>) => {
-  const { color, normal, ao, rough } = blockTextures
+  const { color, normal, ao, rough } = objectsTextures
   const renderGeometry = new THREE.BoxGeometry(width, height, depth)
   const renderMaterial = new THREE.MeshStandardMaterial({
     map: color,
@@ -143,11 +189,12 @@ const useBlock = ({ width, height, depth }: Record<'width'| 'height' | 'depth', 
     body.position.copy(position)
 
     return {
-      mesh,
-      body
+      render: mesh,
+      physic: body
     }
   }
 }
+
 
 const createBlockWall = (scene: THREE.Scene, world: CANNON.World) => {
   const rowsCount = 7, columnsCount = 7
@@ -162,8 +209,8 @@ const createBlockWall = (scene: THREE.Scene, world: CANNON.World) => {
       positionVec3.set(x, y, 0)
       const block = createBlock(positionVec3)
       blocks.push(block)
-      scene.add(block.mesh)
-      world.addBody(block.body)
+      scene.add(block.render)
+      world.addBody(block.physic)
     }
   }
   return blocks
@@ -190,24 +237,30 @@ const useShell = (scene: THREE.Scene, world: CANNON.World) => {
     world.addBody(body)
 
     return {
-      mesh,
-      body,
+      render: mesh,
+      physic: body,
     }
   }
 }
 
 const useReset = (scene: THREE.Scene, world: CANNON.World) => {
-  return ({ body, mesh }: ActiveObject) => {
-    // render clear
+  const resetMesh = (mesh: THREE.Mesh) => {
     mesh.geometry?.dispose()
     if (!Array.isArray(mesh.material)) {
       mesh.material?.dispose()
     } else {
       mesh.material.forEach((material) => material.dispose())
     }
-    scene.remove(mesh)
-    // physics clear
-    world.remove(body)
+  }
+
+  return ({ physic, render }: ActiveObject) => {
+    render.traverse((elem) => {
+      if (elem instanceof THREE.Mesh) {
+        resetMesh(elem)
+      }
+    })
+    scene.remove(render)
+    world.remove(physic)
   }
 }
 
@@ -283,6 +336,7 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     camera.position.set(0, 2, 15)
     const blocks = createBlockWall(scene, world)
     activeObjects.push(...blocks)
+    createModel(scene, world, activeObjects)
     isGameGoing = true
   }
   runGame()
@@ -315,15 +369,17 @@ initScene(sceneProps)(({ scene, camera, renderer, orbitControls }) => {
     world.step(1 / 60, times.delta, 3)
     //* reverse loop for dynamically removing elements from an array (not changes indexes)
     for (let i = activeObjects.length - 1; i >= 0; i--) {
-      const { body, mesh } = activeObjects[i]   
-      if (!isContainsPoint(mesh.position)) {
+      const { physic, render } = activeObjects[i]   
+      if (!isContainsPoint(render.position)) {
         resetObject(activeObjects[i])
         activeObjects.splice(i, 1)
         continue
       }
-      mesh.position.copy(body.position)
-      mesh.quaternion.copy(body.quaternion)
+      render.position.copy(physic.position)
+      render.quaternion.copy(physic.quaternion)
     }
+
+    console.log('activeObjects', activeObjects)
 
     // win process
     if (activeObjects.length === 0 && isGameGoing === true) {
