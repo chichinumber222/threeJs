@@ -34,7 +34,8 @@ module.exports = {
         use: 'file-loader',
       },
       {
-        test: /\.glsl$/i,
+        test: /\.glsl$/,
+        exclude: /node_modules/,
         use: 'raw-loader',
       },
       {
