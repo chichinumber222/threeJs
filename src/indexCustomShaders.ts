@@ -9,6 +9,8 @@ import testVertexShader2 from './shaders/test2/vertex.glsl'
 import testFragmentShader2 from './shaders/test2/fragment.glsl'
 import testVertexShader3 from './shaders/test3/vertex.glsl'
 import testFragmentShader3 from './shaders/test3/fragment.glsl'
+import testVertexShader4 from './shaders/test4/vertex.glsl'
+import testFragmentShader4 from './shaders/test4/fragment.glsl'
 
 const gui = new GUI()
 const textureLoader = new THREE.TextureLoader()
@@ -66,6 +68,20 @@ const mountTestPlane3 = (scene: THREE.Scene) => {
   return mesh
 }
 
+const mountTestPlane4 = (scene: THREE.Scene) => {
+  const geometry = new THREE.PlaneGeometry(5, 5, 32, 32)
+  const material = new THREE.ShaderMaterial({
+    vertexShader: testVertexShader4,
+    fragmentShader: testFragmentShader4,
+  })
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.position.copy(new THREE.Vector3(0, -6, -1))
+  mesh.rotation.y = -Math.PI / 10
+  mesh.name = 'plane4'
+  scene.add(mesh)
+  return mesh
+}
+
 const initShaderHelpers = (gui: GUI, mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.RawShaderMaterial>) => {
   const folder = gui
     .addFolder('shaders')
@@ -93,6 +109,8 @@ initScene({})(({ scene, camera, renderer }) => {
 
   const testPlane3 = mountTestPlane3(scene)
 
+  mountTestPlane4(scene)
+
   const clock = new THREE.Clock()
   function animate() {
     const elapsedTime = clock.getElapsedTime()
@@ -107,4 +125,3 @@ initScene({})(({ scene, camera, renderer }) => {
   initHelpersControls(gui, scene)
   initShaderHelpers(gui, testPlane3)
 })
-
