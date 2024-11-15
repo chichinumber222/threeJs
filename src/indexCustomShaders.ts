@@ -84,7 +84,7 @@ const mountTestPlane4 = (scene: THREE.Scene) => {
 
 const initShaderHelpers = (gui: GUI, mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.RawShaderMaterial>) => {
   const folder = gui
-    .addFolder('shaders')
+    .addFolder('Flag (shaders)')
   folder
     .add(mesh.material.uniforms.uFrequency.value, 'x')
     .min(0)
