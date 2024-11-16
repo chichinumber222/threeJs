@@ -196,6 +196,43 @@ void main() {
     // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
 
     // Pattern 38
+    // vec2 wavedUv = vec2(
+    //     vUv.x + sin(vUv.y * 30.0) * 0.1,
+    //     vUv.y + sin(vUv.x * 30.0) * 0.1
+    // );
+    // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
+
+    // Pattern 39
+    // vec2 wavedUv = vec2(
+    //     vUv.x + sin(vUv.y * 100.0) * 0.1,
+    //     vUv.y + sin(vUv.x * 100.0) * 0.1
+    // );
+    // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
+
+    // Pattern 40
+    //* angle(y, x) - вычисляет угол в прямоугольном треугольнике между гипотенузой и одним из катетов
+    // float angle = atan(vUv.x, vUv.y);
+    // float strength = angle;
+
+    // Pattern 41
+    // float angle = atan(vUv.x - 0.5, vUv.y - 0.5);
+    // float strength = angle;
+
+    // Pattern 42
+    // float angle = (atan(vUv.x - 0.5, vUv.y - 0.5) + PI) / (2.0 * PI);
+    // float strength = angle;
+
+    // Pattern 43
+    // float rayAngle = PI / 9.0;
+    // float angle = atan(vUv.x - 0.5, vUv.y - 0.5) + PI;
+    // float strength = (angle - floor(angle / rayAngle) * rayAngle) / rayAngle;
+
+    // Pattern 43 (version 2)
+    // float rayAngle = PI / 9.0;
+    // float angle = atan(vUv.x - 0.5, vUv.y - 0.5) + PI;
+    // float strength = mod(angle, rayAngle) / rayAngle;
+
+    // Pattern 44
     float strength = vUv.x;
 
     gl_FragColor = vec4(vec3(strength), 1.0);
