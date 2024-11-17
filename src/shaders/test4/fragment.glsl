@@ -1,5 +1,7 @@
 #define PI 3.1415926535897932384626433832795
 
+uniform float uTime;
+
 varying vec2 vUv;
 
 float random (in vec2 _st) {
@@ -236,11 +238,11 @@ void main() {
     // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
 
     // Pattern 38
-    vec2 wavedUv = vec2(
-        vUv.x + sin(vUv.y * 30.0) * 0.1,
-        vUv.y + sin(vUv.x * 30.0) * 0.1
-    );
-    float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
+    // vec2 wavedUv = vec2(
+    //     vUv.x + sin(vUv.y * 30.0) * 0.1,
+    //     vUv.y + sin(vUv.x * 30.0) * 0.1
+    // );
+    // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
 
     // Pattern 39
     // vec2 wavedUv = vec2(
@@ -279,9 +281,9 @@ void main() {
     // float strength = sin(part * 2.0 * PI);
 
     // Pattern 45
-    // float angle = atan(vUv.x - 0.5, vUv.y - 0.5) + PI;
-    // float radius = 0.25 + sin(angle * 15.0) * 0.02;
-    // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), vUv) - radius));
+    float angle = atan(vUv.x - 0.5, vUv.y - 0.5) + PI;
+    float radius = 0.25 + sin(angle * 15.0 + uTime * 5.0) * 0.02;
+    float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), vUv) - radius));
 
     // Pattern 46
     // float strength = cnoise(vUv * 10.0);
@@ -305,7 +307,7 @@ void main() {
     // Color version
     vec3 blackColor = vec3(0.0);
     vec3 vUvColored = vec3(vUv, 0.7);
-    //* mix(a, b, c) - используется для линейной интерполяции между двумя значениями a и b на основе третьего параметра (веса) c
+    //* mix(a, b, c) - используется для линейной интерполяции между двумя значениями a и b на основе третьего параметра (веса) c.
     vec3 mixedColor = mix(blackColor, vUvColored, strength);
     gl_FragColor = vec4(mixedColor, 1.0);
 

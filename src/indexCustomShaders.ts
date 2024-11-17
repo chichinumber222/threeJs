@@ -73,6 +73,9 @@ const mountTestPlane4 = (scene: THREE.Scene) => {
   const material = new THREE.ShaderMaterial({
     vertexShader: testVertexShader4,
     fragmentShader: testFragmentShader4,
+    uniforms: {
+      uTime: { value: 0 },
+    }
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.position.copy(new THREE.Vector3(0, -6, -1))
@@ -109,12 +112,13 @@ initScene({})(({ scene, camera, renderer }) => {
 
   const testPlane3 = mountTestPlane3(scene)
 
-  mountTestPlane4(scene)
+  const testPlane4 = mountTestPlane4(scene)
 
   const clock = new THREE.Clock()
   function animate() {
     const elapsedTime = clock.getElapsedTime()
     testPlane3.material.uniforms.uTime.value = elapsedTime
+    testPlane4.material.uniforms.uTime.value = elapsedTime
 
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
