@@ -14,7 +14,8 @@ module.exports = {
     indexControls: './src/indexControls.ts',
     indexGalaxy: './src/indexGalaxy.ts',
     indexPhysics: './src/indexPhysics.ts',
-    indexCustomShaders: './src/indexCustomShaders.ts'
+    indexCustomShaders: './src/indexCustomShaders.ts',
+    indexWaterWithShaders: './src/indexWaterWithShaders.ts'
   },
   output: {
     filename: '[name].bundle.js',
@@ -104,6 +105,11 @@ module.exports = {
       template: './src/indexCustomShaders.html',
       filename: 'indexCustomShaders.html',
       chunks: ['indexCustomShaders']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexWaterWithShaders.html',
+      filename: 'indexWaterWithShaders.html',
+      chunks: ['indexWaterWithShaders']
     }),
     new CopyWebpackPlugin({
       patterns: [
