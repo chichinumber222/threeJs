@@ -23,20 +23,26 @@ const createPlane = (scene: THREE.Scene) => {
     fragmentShader: waterFragmentShader,
     uniforms: {
       uBigWavesFrequency: {
-        value: new THREE.Vector2(2, 3),
+        value: new THREE.Vector2(1, 1.5),
       },
       uBigWavesDepth: {
-        value: 0.3,
+        value: 0.5,
       },
       uTime: {
         value: 0,
       },
-      surfaceColor: {
+      uSurfaceColor: {
         value: new THREE.Color(waterColors.surface),
       },
-      depthColor: {
+      uDepthColor: {
         value: new THREE.Color(waterColors.depth),
       },
+      uColorOffset: {
+        value: 1.0,
+      },
+      uColorMultiplier: {
+        value: 0.6,
+      }
     }
   })
   const mesh = new THREE.Mesh(geometry, material)
@@ -51,8 +57,10 @@ const initHelpersWater = (gui: GUI, mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.
   folder.add(mesh.material.uniforms.uBigWavesFrequency.value, 'x').min(0).max(5).step(0.001).name('uBigWavesFrequencyX')
   folder.add(mesh.material.uniforms.uBigWavesFrequency.value, 'y').min(0).max(10).step(0.001).name('uBigWavesFrequencyY')
   folder.add(mesh.material.uniforms.uBigWavesDepth, 'value').min(0).max(5).step(0.001).name('uBigWavesDepth')
-  folder.addColor(waterColors, 'surface').onChange(() => mesh.material.uniforms.surfaceColor.value = new THREE.Color(waterColors.surface))
-  folder.addColor(waterColors, 'depth').onChange(() => mesh.material.uniforms.depthColor.value = new THREE.Color(waterColors.depth))
+  folder.addColor(waterColors, 'surface').onChange(() => mesh.material.uniforms.uSurfaceColor.value = new THREE.Color(waterColors.surface))
+  folder.addColor(waterColors, 'depth').onChange(() => mesh.material.uniforms.uDepthColor.value = new THREE.Color(waterColors.depth))
+  folder.add(mesh.material.uniforms.uColorOffset, 'value').min(0).max(4).step(0.001).name('uColorOffset')
+  folder.add(mesh.material.uniforms.uColorMultiplier, 'value').min(0).max(2).step(0.001).name('uColorMultiplier')
   folder.close()
 }
 
