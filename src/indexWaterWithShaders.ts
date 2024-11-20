@@ -5,12 +5,14 @@ import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
 import waterVertexShader from './shaders/water/vertex.glsl'
 import waterFragmentShader from './shaders/water/fragment.glsl'
+import { useCount } from './utils/use-count'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0x04141f),
 }
 
 const gui = new GUI()
+
 const waterColors = {
   surface: '#91dbee',
   depth: '#18accd',
@@ -68,6 +70,7 @@ const createPlane = (scene: THREE.Scene) => {
 }
 
 const initHelpersWater = (gui: GUI, mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>) => {
+  const getCount = useCount()
   const folder = gui.addFolder('Water')
   folder.add(mesh.material.uniforms.uBigWavesFrequency.value, 'x').min(0).max(5).step(0.001).name('uBigWavesFrequencyX')
   folder.add(mesh.material.uniforms.uBigWavesFrequency.value, 'y').min(0).max(10).step(0.001).name('uBigWavesFrequencyY')
@@ -81,6 +84,48 @@ const initHelpersWater = (gui: GUI, mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.
   folder.addColor(waterColors, 'depth').onChange(() => mesh.material.uniforms.uDepthColor.value = new THREE.Color(waterColors.depth)).name('uDepthColor')
   folder.add(mesh.material.uniforms.uColorOffset, 'value').min(0).max(4).step(0.001).name('uColorOffset')
   folder.add(mesh.material.uniforms.uColorMultiplier, 'value').min(0).max(2).step(0.001).name('uColorMultiplier')
+  const presetMethods = {
+    save: () => {
+      const index = getCount()
+      const preset = {
+        uBigWavesFrequencyX: mesh.material.uniforms.uBigWavesFrequency.value.x,
+        uBigWavesFrequencyY: mesh.material.uniforms.uBigWavesFrequency.value.y,
+        uBigWavesElevation: mesh.material.uniforms.uBigWavesElevation.value,
+        uBigWavesSpeed: mesh.material.uniforms.uBigWavesSpeed.value,
+        uSmallWavesFrequency: mesh.material.uniforms.uSmallWavesFrequency.value,
+        uSmallWavesElevation: mesh.material.uniforms.uSmallWavesElevation.value,
+        uSmallWavesSpeed: mesh.material.uniforms.uSmallWavesSpeed.value,
+        uSmallWavesIterations: mesh.material.uniforms.uSmallWavesIterations.value,
+        uSurfaceColor: waterColors.surface,
+        uDepthColor: waterColors.depth,
+        uColorOffset: mesh.material.uniforms.uColorOffset.value,
+        uColorMultiplier: mesh.material.uniforms.uColorMultiplier.value,
+      }
+      const methods = {
+        apply: () => {
+          mesh.material.uniforms.uBigWavesFrequency.value.x = preset.uBigWavesFrequencyX
+          mesh.material.uniforms.uBigWavesFrequency.value.y = preset.uBigWavesFrequencyY
+          mesh.material.uniforms.uBigWavesElevation.value = preset.uBigWavesElevation
+          mesh.material.uniforms.uBigWavesSpeed.value = preset.uBigWavesSpeed
+          mesh.material.uniforms.uSmallWavesFrequency.value = preset.uSmallWavesFrequency
+          mesh.material.uniforms.uSmallWavesElevation.value = preset.uSmallWavesElevation
+          mesh.material.uniforms.uSmallWavesSpeed.value = preset.uSmallWavesSpeed
+          mesh.material.uniforms.uSmallWavesIterations.value = preset.uSmallWavesIterations
+          waterColors.surface = preset.uSurfaceColor
+          waterColors.depth = preset.uDepthColor
+          mesh.material.uniforms.uSurfaceColor.value = new THREE.Color(waterColors.surface)
+          mesh.material.uniforms.uDepthColor.value = new THREE.Color(waterColors.depth)
+          mesh.material.uniforms.uColorOffset.value = preset.uColorOffset
+          mesh.material.uniforms.uColorMultiplier.value = preset.uColorMultiplier
+          folder.controllers.forEach((controller) => {
+            controller.updateDisplay()
+          })
+        }
+      }
+      folder.add(methods, 'apply').name(`Применить пресет ${index}`)
+    },
+  }
+  folder.add(presetMethods, 'save').name('Сохранить пресет')
 }
 
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
