@@ -29,11 +29,11 @@ type GalaxyCreateFunc = (param: GalaxyParameters) => Galaxy
 const galaxyParameters: GalaxyParameters = {
   pointSize: 35,
   pointsCount: 50000,
-  radius: 7,
+  radius: 5,
   branches: 5,
   spinPower: 0.33,
-  frequencyPower: 4,
-  frequencyDistance: 0.7,
+  frequencyPower: 3,
+  frequencyDistance: 0.5,
   insideColor: '#ff7214',
   outsideColor: '#00aeff',
 }
@@ -105,6 +105,7 @@ const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCre
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1))
     geometry.setAttribute('aRandomness', new THREE.BufferAttribute(randomness, 3))
+    points.name = 'galaxy'
     scene.add(points)
     return points
   }
@@ -113,7 +114,7 @@ const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCre
 const initGalaxyControls = (gui: GUI, parameters: GalaxyParameters, updateCb?: GalaxyCreateFunc) => {
   const galaxyDebugFolder = gui.addFolder('Galaxy')
   galaxyDebugFolder.add(parameters, 'pointSize').min(0).max(60).step(1.0)
-  galaxyDebugFolder.add(parameters, 'pointsCount').min(100).max(20000).step(1)
+  galaxyDebugFolder.add(parameters, 'pointsCount').min(100).max(100000).step(1)
   galaxyDebugFolder.add(parameters, 'radius').min(0).max(20).step(0.01)
   galaxyDebugFolder.add(parameters, 'branches').min(3).max(10).step(1)
   galaxyDebugFolder.add(parameters, 'spinPower').min(-2).max(2).step(0.01)
@@ -128,15 +129,19 @@ const initGalaxyControls = (gui: GUI, parameters: GalaxyParameters, updateCb?: G
 }
 
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
-  camera.position.set(5, 8, 12)
+  camera.position.set(4, 6, 9)
 
   const createGalaxy = useGalaxy(scene, renderer)
-  const galaxy = createGalaxy(galaxyParameters)
+  createGalaxy(galaxyParameters)
 
   const clock = new THREE.Clock()
   function animate() {
     const elapsedTime = clock.getElapsedTime()
-    galaxy.material.uniforms.uTime.value = elapsedTime
+
+    const galaxy = scene.getObjectByName('galaxy')
+    if (galaxy) {
+      (galaxy as Galaxy).material.uniforms.uTime.value = elapsedTime
+    }
 
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
