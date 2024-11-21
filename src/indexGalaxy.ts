@@ -27,13 +27,13 @@ type Galaxy = THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
 type GalaxyCreateFunc = (param: GalaxyParameters) => Galaxy
 
 const galaxyParameters: GalaxyParameters = {
-  pointSize: 50,
-  pointsCount: 15000,
-  radius: 14,
-  branches: 6,
+  pointSize: 35,
+  pointsCount: 50000,
+  radius: 7,
+  branches: 5,
   spinPower: 0.33,
-  frequencyPower: 6,
-  frequencyDistance: 1.5,
+  frequencyPower: 4,
+  frequencyDistance: 0.7,
   insideColor: '#ff7214',
   outsideColor: '#00aeff',
 }
@@ -71,6 +71,7 @@ const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCre
 
     const positions = new Float32Array(param.pointsCount * 3)
     const angle = (2 * Math.PI) / param.branches
+    const randomness = new Float32Array(param.pointsCount * 3)
     const colors = new Float32Array(param.pointsCount * 3)
     const insideColor = new THREE.Color(param.insideColor)
     const outsideColor = new THREE.Color(param.outsideColor)
@@ -80,12 +81,16 @@ const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCre
       const randomRadius = Math.random() * param.radius
       const currentAngle = angle * (i + 1)
       const spinAngle = param.spinPower * randomRadius
+      positions[i * 3] = Math.sin(currentAngle + spinAngle) * randomRadius
+      positions[i * 3 + 1] = 0.0
+      positions[i * 3 + 2] = Math.cos(currentAngle + spinAngle) * randomRadius
+      // randomness
       const spreadOutX = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
       const spreadOutY = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
       const spreadOutZ = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
-      positions[i * 3] = Math.sin(currentAngle + spinAngle) * randomRadius + spreadOutX
-      positions[i * 3 + 1] = spreadOutY
-      positions[i * 3 + 2] = Math.cos(currentAngle + spinAngle) * randomRadius + spreadOutZ
+      randomness[i * 3] = spreadOutX
+      randomness[i * 3 + 1] = spreadOutY
+      randomness[i * 3 + 2] = spreadOutZ
       // color
       const currentInterolatePower = randomRadius / param.radius
       const currentColor = insideColor.clone()
@@ -99,6 +104,7 @@ const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCre
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1))
+    geometry.setAttribute('aRandomness', new THREE.BufferAttribute(randomness, 3))
     scene.add(points)
     return points
   }
