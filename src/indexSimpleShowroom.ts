@@ -3,15 +3,21 @@ import GUI from "lil-gui"
 import { initScene, Props as InitSceneProps } from "./bootstrap/bootstrap"
 import { stats } from "./utils/stats"
 import { initHelpersControls } from "./controls/helper-controls"
-import { foreverPlane } from "./bootstrap/floor"
 import { onChangeCursor } from "./utils/update-coord"
 import gsap from 'gsap'
+import { OrbitControls } from "./controller/orbit"
+import _ from 'lodash'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0xffffff),
 }
 
 const gui = new GUI()
+const raycaster = new THREE.Raycaster()
+const mouse = onChangeCursor()
+const measure = 10
+const offset = 0.1
+const floorOffset = 0.9
 
 const getCameraDirection = (camera: THREE.PerspectiveCamera) => {
   const direction = new THREE.Vector3()
@@ -19,7 +25,51 @@ const getCameraDirection = (camera: THREE.PerspectiveCamera) => {
   return direction
 }
 
-const mountTestCubes = (scene: THREE.Scene) => {
+const createFloor = (scene: THREE.Scene) => {
+  const geometry = new THREE.PlaneGeometry(measure, measure)
+  const material = new THREE.MeshStandardMaterial({ color: '#4D8C57', roughness: 0.7 })
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
+  mesh.receiveShadow = true
+  mesh.name = 'plane'
+  scene.add(mesh)
+  return mesh
+}
+
+const createWalls = (scene: THREE.Scene) => {
+  const geometry = new THREE.PlaneGeometry(measure, measure / 2)
+  const material = new THREE.MeshStandardMaterial({ color: '#CDCA74', roughness: 0.7 })
+  const wallNorth = new THREE.Mesh(geometry, material)
+  wallNorth.position.set(0, (measure / 4) - offset, -((measure / 2) - offset))
+  wallNorth.name = 'wall-north'
+  const wallSouth = new THREE.Mesh(geometry, material)
+  wallSouth.position.set(0, (measure / 4) - offset, (measure / 2) - offset)
+  wallSouth.rotation.set(0, Math.PI, 0)
+  wallSouth.name = 'wall-south'
+  const wallWest = new THREE.Mesh(geometry, material)
+  wallWest.position.set((measure / 2) - offset, (measure / 4) - offset, 0)
+  wallWest.rotation.set(0, -Math.PI / 2, 0)
+  wallWest.name = 'wall-west'
+  const wallEast = new THREE.Mesh(geometry, material)
+  wallEast.position.set(-((measure / 2) - offset), (measure / 4) - offset, 0)
+  wallEast.rotation.set(0, Math.PI / 2, 0)
+  wallEast.name = 'wall-east'
+  scene.add(wallNorth, wallSouth, wallWest, wallEast)
+  return [wallNorth, wallSouth, wallWest, wallEast]
+}
+
+const createRoof = (scene: THREE.Scene) => {
+  const geometry = new THREE.PlaneGeometry(measure, measure)
+  const material = new THREE.MeshStandardMaterial({ color: '#F8DE7E', roughness: 0.7 })
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotation.set(Math.PI / 2, 0, 0)
+  mesh.position.set(0, (measure / 2) - offset, 0)
+  mesh.name = 'roof'
+  scene.add(mesh)
+  return mesh
+}
+
+const createTestCubes = (scene: THREE.Scene) => {
   const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
   const material1 = new THREE.MeshBasicMaterial({ color: '#3a7e57' })
   const material2 = new THREE.MeshBasicMaterial({ color: '#34b5ff' })
@@ -33,9 +83,89 @@ const mountTestCubes = (scene: THREE.Scene) => {
   return [cube1, cube2]
 }
 
+const createCircleTarget = (scene: THREE.Scene) => {
+  const geometry = new THREE.CircleGeometry(0.3, 20)
+  const material = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.2 })
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
+  mesh.name = 'circle-target'
+  mesh.visible = false
+  scene.add(mesh)
+  return mesh
+}
+
+const initCheckPermissionToMove = (
+  camera: THREE.PerspectiveCamera,
+  objectsToIntersect: THREE.Mesh[],
+  targetObject: THREE.Mesh,
+  circleTarget: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>
+) => {
+  const checkPermission = _.throttle((event: MouseEvent) => {
+    event.preventDefault()
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects(objectsToIntersect)
+    if (intersected.length && intersected[0].object === targetObject) {
+      const point = intersected[0].point
+      const widthWithOffset = (measure / 2) - floorOffset
+      if (
+        point.x > -widthWithOffset && point.x < widthWithOffset &&
+        point.y > -widthWithOffset && point.y < widthWithOffset &&
+        point.z > -widthWithOffset && point.z < widthWithOffset
+      ) {
+        circleTarget.position.set(point.x, point.y + 0.01, point.z)
+        circleTarget.visible = true
+      } else {
+        circleTarget.visible = false
+      }
+    } else {
+      circleTarget.visible = false
+    }
+  }, 25)
+  window.addEventListener('mousemove', checkPermission)
+}
+
+const initMoveCamera = (
+  camera: THREE.PerspectiveCamera,
+  objectsToIntersect: THREE.Mesh[],
+  targetObject: THREE.Mesh,
+  orbitControls?: OrbitControls,
+) => {
+  const move = (event: MouseEvent) => {
+    event.preventDefault()
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects(objectsToIntersect)
+    if (intersected.length && intersected[0].object === targetObject) {
+      const point = intersected[0].point
+      const widthWithOffset = (measure / 2) - floorOffset
+      if (
+        point.x > -widthWithOffset && point.x < widthWithOffset &&
+        point.y > -widthWithOffset && point.y < widthWithOffset &&
+        point.z > -widthWithOffset && point.z < widthWithOffset
+      ) {
+        gsap.to(camera.position, {
+          duration: 0.6,
+          ease: "power2.inOut",
+          x: point.x,
+          z: point.z,
+          onStart: () => {
+            if (orbitControls) orbitControls.enabled = false
+          },
+          onComplete: () => {
+            if (orbitControls) orbitControls!.enabled = true
+          }
+        })
+      }
+    }
+  }
+  window.addEventListener('contextmenu', move)
+}
+
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
-  camera.position.set(2, 0.8, 2)
+  camera.position.set(1, 0.8, 1)
   orbitControls!.rotateSpeed = -0.5
+  orbitControls!.enableZoom = false
+
+  const needCheckToIntersect: THREE.Mesh[] = []
 
   const target = new THREE.Vector3()
   const updateControl = () => {
@@ -45,33 +175,16 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   }
   updateControl()
 
-  const plane = foreverPlane(scene, { position: new THREE.Vector3(0, 0, 0)})
+  const floor = createFloor(scene)
+  const cubes = createTestCubes(scene)
+  createWalls(scene)
+  createRoof(scene)
+  needCheckToIntersect.push(floor, ...cubes)
 
-  mountTestCubes(scene)
+  const circleTarget = createCircleTarget(scene)
 
-  const mouse = onChangeCursor()
-  const raycaster = new THREE.Raycaster()
-
-  window.addEventListener('contextmenu', () => {
-    raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObject(plane)
-    if (intersected.length) {
-      const pointVector = intersected[0].point
-      gsap.to(camera.position, {
-        duration: 1,
-        ease: "power2.inOut",
-        x: pointVector.x,
-        z: pointVector.z,
-        onStart: () => {
-          orbitControls?.disconnect()
-        },
-        onComplete: () => {
-          orbitControls?.connect()
-        }
-      })
-    }
-  })
-
+  initMoveCamera(camera, needCheckToIntersect, floor, orbitControls)
+  initCheckPermissionToMove(camera, needCheckToIntersect, floor, circleTarget)
 
   function animate() {
     requestAnimationFrame(animate)
