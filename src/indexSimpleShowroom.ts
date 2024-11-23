@@ -154,6 +154,7 @@ initScene({})(({ scene, camera, renderer, orbitControls }) => {
   camera.position.set(1, 0.8, 1)
   orbitControls!.rotateSpeed = -0.5
   orbitControls!.enableZoom = false
+  orbitControls!.enablePan = false
 
   const updateControl = useControl(camera, orbitControls)
 
