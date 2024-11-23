@@ -1,28 +1,33 @@
 import * as THREE from "three"
-import GUI from "lil-gui"
-import { initScene, Props as InitSceneProps } from "./bootstrap/bootstrap"
+import { initScene } from "./bootstrap/bootstrap"
 import { stats } from "./utils/stats"
-import { initHelpersControls } from "./controls/helper-controls"
 import { onChangeCursor } from "./utils/update-coord"
 import gsap from 'gsap'
 import { OrbitControls } from "./controller/orbit"
 import _ from 'lodash'
 
-const props: InitSceneProps = {
-  backgroundColor: new THREE.Color(0xffffff),
-}
-
-const gui = new GUI()
 const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
 const measure = 10
 const offset = 0.1
 const floorOffset = 0.9
 
-const getCameraDirection = (camera: THREE.PerspectiveCamera) => {
+const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
   const direction = new THREE.Vector3()
-  camera.getWorldDirection(direction)
-  return direction
+  return () => {
+    camera.getWorldDirection(direction)
+    return direction
+  }
+}
+
+const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitControls) => {
+  const getCameraDirection = useCameraDirection(camera)
+  const cameraEyes = new THREE.Vector3()
+  return () => {
+    cameraEyes.copy(camera.position).add(getCameraDirection().multiplyScalar(0.5))
+    orbitControls?.target.copy(cameraEyes)
+    orbitControls?.update()
+  }
 }
 
 const createFloor = (scene: THREE.Scene) => {
@@ -69,81 +74,46 @@ const createRoof = (scene: THREE.Scene) => {
   return mesh
 }
 
-const createTestCubes = (scene: THREE.Scene) => {
+const createTestCube = (scene: THREE.Scene) => {
   const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
-  const material1 = new THREE.MeshBasicMaterial({ color: '#3a7e57' })
-  const material2 = new THREE.MeshBasicMaterial({ color: '#34b5ff' })
-  const cube1 = new THREE.Mesh(geometry, material1)
-  cube1.position.set(0, 0.5, 0)
-  cube1.name = 'cube1'
-  const cube2 = new THREE.Mesh(geometry, material2)
-  cube2.position.set(4, 0.5, 4)
-  cube2.name = 'cube2'
-  scene.add(cube1, cube2)
-  return [cube1, cube2]
+  const material = new THREE.MeshBasicMaterial({ color: '#34b5ff' })
+  const cube = new THREE.Mesh(geometry, material)
+  cube.position.set(4, 0.5, 4)
+  cube.name = 'cube'
+  scene.add(cube)
+  return cube
 }
 
-const createCircleTarget = (scene: THREE.Scene) => {
+const createCircleMarker = (scene: THREE.Scene) => {
   const geometry = new THREE.CircleGeometry(0.3, 20)
   const material = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.2 })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
-  mesh.name = 'circle-target'
+  mesh.name = 'circle'
   mesh.visible = false
   scene.add(mesh)
   return mesh
 }
 
-const initCheckPermissionToMove = (
-  camera: THREE.PerspectiveCamera,
-  objectsToIntersect: THREE.Mesh[],
-  targetObject: THREE.Mesh,
-  circleTarget: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>
-) => {
-  const checkPermission = _.throttle((event: MouseEvent) => {
-    event.preventDefault()
-    raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects(objectsToIntersect)
-    if (intersected.length && intersected[0].object === targetObject) {
-      const point = intersected[0].point
-      const widthWithOffset = (measure / 2) - floorOffset
-      if (
-        point.x > -widthWithOffset && point.x < widthWithOffset &&
-        point.y > -widthWithOffset && point.y < widthWithOffset &&
-        point.z > -widthWithOffset && point.z < widthWithOffset
-      ) {
-        circleTarget.position.set(point.x, point.y + 0.01, point.z)
-        circleTarget.visible = true
-      } else {
-        circleTarget.visible = false
-      }
-    } else {
-      circleTarget.visible = false
-    }
-  }, 25)
-  window.addEventListener('mousemove', checkPermission)
-}
-
 const initMoveCamera = (
+  scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
   objectsToIntersect: THREE.Mesh[],
-  targetObject: THREE.Mesh,
   orbitControls?: OrbitControls,
 ) => {
   const move = (event: MouseEvent) => {
     event.preventDefault()
     raycaster.setFromCamera(mouse, camera)
     const intersected = raycaster.intersectObjects(objectsToIntersect)
-    if (intersected.length && intersected[0].object === targetObject) {
+    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
       const point = intersected[0].point
       const widthWithOffset = (measure / 2) - floorOffset
       if (
         point.x > -widthWithOffset && point.x < widthWithOffset &&
-        point.y > -widthWithOffset && point.y < widthWithOffset &&
         point.z > -widthWithOffset && point.z < widthWithOffset
       ) {
         gsap.to(camera.position, {
-          duration: 0.6,
+          duration: 0.4,
           ease: "power2.inOut",
           x: point.x,
           z: point.z,
@@ -157,34 +127,44 @@ const initMoveCamera = (
       }
     }
   }
+  const marker = createCircleMarker(scene)
+  const showMarker = _.throttle((event: MouseEvent) => {
+    event.preventDefault()
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects(objectsToIntersect)
+    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
+      const point = intersected[0].point
+      const widthWithOffset = (measure / 2) - floorOffset
+      if (
+        point.x > -widthWithOffset && point.x < widthWithOffset &&
+        point.z > -widthWithOffset && point.z < widthWithOffset
+      ) {
+        marker.position.set(point.x, point.y + 0.01, point.z)
+        marker.visible = true
+        return
+      }
+    }
+    marker.visible = false
+  }, 25)
   window.addEventListener('contextmenu', move)
+  window.addEventListener('mousemove', showMarker)
 }
 
-initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+initScene({})(({ scene, camera, renderer, orbitControls }) => {
   camera.position.set(1, 0.8, 1)
   orbitControls!.rotateSpeed = -0.5
   orbitControls!.enableZoom = false
 
-  const needCheckToIntersect: THREE.Mesh[] = []
+  const updateControl = useControl(camera, orbitControls)
 
-  const target = new THREE.Vector3()
-  const updateControl = () => {
-    target.copy(camera.position).add(getCameraDirection(camera).multiplyScalar(0.5))
-    orbitControls!.target.copy(target)
-    orbitControls!.update()
-  }
-  updateControl()
-
-  const floor = createFloor(scene)
-  const cubes = createTestCubes(scene)
+  const bottomMeshes: THREE.Mesh[] = [
+    createFloor(scene),
+    createTestCube(scene)
+  ]
   createWalls(scene)
   createRoof(scene)
-  needCheckToIntersect.push(floor, ...cubes)
 
-  const circleTarget = createCircleTarget(scene)
-
-  initMoveCamera(camera, needCheckToIntersect, floor, orbitControls)
-  initCheckPermissionToMove(camera, needCheckToIntersect, floor, circleTarget)
+  initMoveCamera(scene, camera, bottomMeshes, orbitControls)
 
   function animate() {
     requestAnimationFrame(animate)
@@ -193,6 +173,4 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     stats.update()
   }
   animate()
-
-  initHelpersControls(gui, scene)
 })
