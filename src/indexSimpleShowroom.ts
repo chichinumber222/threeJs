@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { OrbitControls } from "./controller/orbit"
 import _ from 'lodash'
 
+const textureLoader = new THREE.TextureLoader()
 const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
 const measure = 10
@@ -31,12 +32,37 @@ const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitContro
 }
 
 const createFloor = (scene: THREE.Scene) => {
-  const geometry = new THREE.PlaneGeometry(measure, measure)
-  const material = new THREE.MeshStandardMaterial({ color: '#4D8C57', roughness: 0.7 })
-  const mesh = new THREE.Mesh(geometry, material)
-  mesh.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
+  const colorTexture = textureLoader.load('static/textures/wood_floor/color.jpg')
+  colorTexture.wrapS = THREE.RepeatWrapping
+  colorTexture.wrapT = THREE.RepeatWrapping
+  colorTexture.repeat.set(5, 5)
+  const normalTexture = textureLoader.load('static/textures/wood_floor/normal.jpg')
+  normalTexture.wrapS = THREE.RepeatWrapping
+  normalTexture.wrapT = THREE.RepeatWrapping
+  normalTexture.repeat.set(5, 5)
+  const ambientOcclusionTexture = textureLoader.load('static/textures/wood_floor/ao.jpg')
+  ambientOcclusionTexture.wrapS = THREE.RepeatWrapping
+  ambientOcclusionTexture.wrapT = THREE.RepeatWrapping
+  ambientOcclusionTexture.repeat.set(5, 5)
+  const roughnessTexture = textureLoader.load('static/textures/wood_floor/rough.jpg')
+  roughnessTexture.wrapS = THREE.RepeatWrapping
+  roughnessTexture.wrapT = THREE.RepeatWrapping
+  roughnessTexture.repeat.set(5, 5)
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(10, 10),
+    new THREE.MeshStandardMaterial({
+      color: 0xdddddd,
+      map: colorTexture,
+      normalMap: normalTexture,
+      aoMap: ambientOcclusionTexture,
+      aoMapIntensity: 3,
+      roughnessMap: roughnessTexture,
+    })
+  )
+  mesh.rotation.x = - Math.PI * 0.5
+  mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.receiveShadow = true
-  mesh.name = 'plane'
+  mesh.name = 'floor'
   scene.add(mesh)
   return mesh
 }
