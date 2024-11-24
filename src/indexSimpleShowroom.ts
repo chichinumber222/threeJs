@@ -110,15 +110,33 @@ const createTestCube = (scene: THREE.Scene) => {
   return cube
 }
 
-const createCircleMarker = (scene: THREE.Scene) => {
-  const geometry = new THREE.CircleGeometry(0.3, 20)
-  const material = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.2 })
-  const mesh = new THREE.Mesh(geometry, material)
-  mesh.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
-  mesh.name = 'circle'
-  mesh.visible = false
-  scene.add(mesh)
-  return mesh
+const createNavigationMarker = (scene: THREE.Scene) => {
+  const group = new THREE.Group()
+  const baseGeometry = new THREE.CircleGeometry(0.3, 30)
+  const baseMaterial = new THREE.MeshBasicMaterial({
+    color: '#ffffff',
+    transparent: true,
+    opacity: 0.2,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const base = new THREE.Mesh(baseGeometry, baseMaterial)
+  const secondaryGeometry = new THREE.CircleGeometry(0.2, 30)
+  const secondaryMaterial = new THREE.MeshBasicMaterial({
+    color: '#ffffff',
+    transparent: true,
+    opacity: 0.05,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const secondary = new THREE.Mesh(secondaryGeometry, secondaryMaterial)
+  secondary.position.z += 0.01
+  group.add(base, secondary)
+  group.rotation.copy(new THREE.Euler(Math.PI / -2, 0, 0))
+  group.name = 'circle'
+  group.visible = false
+  scene.add(group)
+  return group
 }
 
 const initMoveCamera = (
@@ -127,35 +145,10 @@ const initMoveCamera = (
   objectsToIntersect: THREE.Mesh[],
   orbitControls?: OrbitControls,
 ) => {
-  const move = (event: MouseEvent) => {
-    event.preventDefault()
-    raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects(objectsToIntersect)
-    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
-      const point = intersected[0].point
-      const widthWithOffset = (measure / 2) - floorOffset
-      if (
-        point.x > -widthWithOffset && point.x < widthWithOffset &&
-        point.z > -widthWithOffset && point.z < widthWithOffset
-      ) {
-        gsap.to(camera.position, {
-          duration: 0.4,
-          ease: "power2.inOut",
-          x: point.x,
-          z: point.z,
-          onStart: () => {
-            if (orbitControls) orbitControls.enabled = false
-          },
-          onComplete: () => {
-            if (orbitControls) orbitControls!.enabled = true
-          }
-        })
-      }
-    }
-  }
-  const marker = createCircleMarker(scene)
-  const showMarker = _.throttle((event: MouseEvent) => {
-    event.preventDefault()
+  let isActiveMouseMove = true
+
+  const marker = createNavigationMarker(scene)
+  const onMarkerVerification = () => {
     raycaster.setFromCamera(mouse, camera)
     const intersected = raycaster.intersectObjects(objectsToIntersect)
     if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
@@ -171,9 +164,62 @@ const initMoveCamera = (
       }
     }
     marker.visible = false
-  }, 25)
-  window.addEventListener('contextmenu', move)
-  window.addEventListener('mousemove', showMarker)
+  }
+
+  const onMouseMove = _.throttle((event: MouseEvent) => {
+    if (!isActiveMouseMove) {
+      return
+    }
+    event.preventDefault()
+    onMarkerVerification()
+  }, 40)
+
+  const onMotionAnimation = () => {
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects(objectsToIntersect)
+    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
+      const point = intersected[0].point
+      const widthWithOffset = (measure / 2) - floorOffset
+      if (
+        point.x > -widthWithOffset && point.x < widthWithOffset &&
+        point.z > -widthWithOffset && point.z < widthWithOffset
+      ) {
+        const timeline = gsap.timeline({
+          onStart: () => {
+            if (orbitControls) orbitControls.enabled = false
+            isActiveMouseMove = false
+          },
+          onComplete: () => {
+            if (orbitControls) orbitControls!.enabled = true
+            isActiveMouseMove = true
+            onMarkerVerification()
+          },
+        })
+        timeline.addLabel("start", 0)
+        timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
+          duration: 0.2,
+          ease: "power2.inOut",
+          opacity: 0.2,
+          repeat: 1,
+          yoyo: true,
+        }, "start")
+        timeline.to(camera.position, {
+          duration: 0.7,
+          ease: "power2.inOut",
+          x: point.x,
+          z: point.z,
+        }, "start+=0.15")
+      }
+    }
+  }
+
+  const onContextMenu = (event: MouseEvent) => {
+    event.preventDefault()
+    onMotionAnimation()
+  }
+
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('contextmenu', onContextMenu)
 }
 
 initScene({})(({ scene, camera, renderer, orbitControls }) => {
