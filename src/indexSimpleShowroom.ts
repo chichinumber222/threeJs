@@ -145,10 +145,7 @@ const initMoveCamera = (
   objectsToIntersect: THREE.Mesh[],
   orbitControls?: OrbitControls,
 ) => {
-  let isActiveMouseMove = true
-
-  const marker = createNavigationMarker(scene)
-  const onMarkerVerification = () => {
+  const shot = (success: (point: THREE.Vector3) => void, fail?: () => void) => {
     raycaster.setFromCamera(mouse, camera)
     const intersected = raycaster.intersectObjects(objectsToIntersect)
     if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
@@ -158,14 +155,26 @@ const initMoveCamera = (
         point.x > -widthWithOffset && point.x < widthWithOffset &&
         point.z > -widthWithOffset && point.z < widthWithOffset
       ) {
-        marker.position.set(point.x, point.y + 0.01, point.z)
-        marker.visible = true
+        success(point)
         return
       }
     }
-    marker.visible = false
+    fail?.()
   }
 
+  const marker = createNavigationMarker(scene)
+
+  const onMarkerVerification = () => {
+    shot(
+      (point: THREE.Vector3) => {
+        marker.position.set(point.x, point.y + 0.01, point.z)
+        marker.visible = true
+      },
+      () => marker.visible = false
+    )
+  }
+
+  let isActiveMouseMove = true
   const onMouseMove = _.throttle((event: MouseEvent) => {
     if (!isActiveMouseMove) {
       return
@@ -174,43 +183,36 @@ const initMoveCamera = (
     onMarkerVerification()
   }, 40)
 
+  window.addEventListener('mousemove', onMouseMove)
+
   const onMotionAnimation = () => {
-    raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects(objectsToIntersect)
-    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
-      const point = intersected[0].point
-      const widthWithOffset = (measure / 2) - floorOffset
-      if (
-        point.x > -widthWithOffset && point.x < widthWithOffset &&
-        point.z > -widthWithOffset && point.z < widthWithOffset
-      ) {
-        const timeline = gsap.timeline({
-          onStart: () => {
-            if (orbitControls) orbitControls.enabled = false
-            isActiveMouseMove = false
-          },
-          onComplete: () => {
-            if (orbitControls) orbitControls!.enabled = true
-            isActiveMouseMove = true
-            onMarkerVerification()
-          },
-        })
-        timeline.addLabel("start", 0)
-        timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
-          duration: 0.2,
-          ease: "power2.inOut",
-          opacity: 0.2,
-          repeat: 1,
-          yoyo: true,
-        }, "start")
-        timeline.to(camera.position, {
-          duration: 0.7,
-          ease: "power2.inOut",
-          x: point.x,
-          z: point.z,
-        }, "start+=0.15")
-      }
-    }
+    shot((point: THREE.Vector3) => {
+      const timeline = gsap.timeline({
+        onStart: () => {
+          if (orbitControls) orbitControls.enabled = false
+          isActiveMouseMove = false
+        },
+        onComplete: () => {
+          if (orbitControls) orbitControls!.enabled = true
+          isActiveMouseMove = true
+          onMarkerVerification()
+        },
+      })
+      timeline.addLabel("start", 0)
+      timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
+        duration: 0.2,
+        ease: "power2.inOut",
+        opacity: 0.2,
+        repeat: 1,
+        yoyo: true,
+      }, "start")
+      timeline.to(camera.position, {
+        duration: 0.7,
+        ease: "power2.inOut",
+        x: point.x,
+        z: point.z,
+      }, "start+=0.15")
+    })
   }
 
   const onContextMenu = (event: MouseEvent) => {
@@ -218,7 +220,6 @@ const initMoveCamera = (
     onMotionAnimation()
   }
 
-  window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('contextmenu', onContextMenu)
 }
 
