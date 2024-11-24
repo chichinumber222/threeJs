@@ -203,14 +203,24 @@ const initMoveCamera = (
         onStart: () => {
           if (orbitControls) orbitControls.enabled = false
           isActiveMouseMove = false
+          isActiveContextMenu = false
         },
         onComplete: () => {
           if (orbitControls) orbitControls!.enabled = true
           isActiveMouseMove = true
+          isActiveContextMenu = true
           onMarkerVerification()
         },
       })
       timeline.addLabel("start", 0)
+      timeline.to((marker.children[0] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).scale, {
+        duration: 0.2,
+        x: 1.2,
+        y: 1.2,
+        ease: "power2.inOut",
+        repeat: 1,
+        yoyo: true,
+      }, "start")
       timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
         duration: 0.2,
         ease: "power2.inOut",
@@ -227,7 +237,12 @@ const initMoveCamera = (
     })
   }
 
+  let isActiveContextMenu = true
+
   window.addEventListener('contextmenu', (event: MouseEvent) => {
+    if (!isActiveContextMenu) {
+      return
+    }
     event.preventDefault()
     onMotionAnimation()
   })
