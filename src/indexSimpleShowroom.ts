@@ -31,38 +31,51 @@ const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitContro
   }
 }
 
-const createFloor = (scene: THREE.Scene) => {
-  const colorTexture = textureLoader.load('static/textures/wood_floor/color.jpg')
-  colorTexture.wrapS = THREE.RepeatWrapping
-  colorTexture.wrapT = THREE.RepeatWrapping
-  colorTexture.repeat.set(5, 5)
-  const normalTexture = textureLoader.load('static/textures/wood_floor/normal.jpg')
-  normalTexture.wrapS = THREE.RepeatWrapping
-  normalTexture.wrapT = THREE.RepeatWrapping
-  normalTexture.repeat.set(5, 5)
-  const ambientOcclusionTexture = textureLoader.load('static/textures/wood_floor/ao.jpg')
-  ambientOcclusionTexture.wrapS = THREE.RepeatWrapping
-  ambientOcclusionTexture.wrapT = THREE.RepeatWrapping
-  ambientOcclusionTexture.repeat.set(5, 5)
-  const roughnessTexture = textureLoader.load('static/textures/wood_floor/rough.jpg')
-  roughnessTexture.wrapS = THREE.RepeatWrapping
-  roughnessTexture.wrapT = THREE.RepeatWrapping
-  roughnessTexture.repeat.set(5, 5)
+const getRepeatableTexture = (texture: THREE.Texture, repeatCount?: number) => {
+  const count = repeatCount ?? 5
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(count, count)
+  return texture
+}
+
+const createWoodFloor = (scene: THREE.Scene) => {
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 10),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
-      map: colorTexture,
-      normalMap: normalTexture,
-      aoMap: ambientOcclusionTexture,
+      map: getRepeatableTexture(textureLoader.load('static/textures/wood_floor/color.jpg')),
+      normalMap: getRepeatableTexture(textureLoader.load('static/textures/wood_floor/normal.jpg')),
+      aoMap: getRepeatableTexture(textureLoader.load('static/textures/wood_floor/ao.jpg')),
       aoMapIntensity: 3,
-      roughnessMap: roughnessTexture,
+      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wood_floor/rough.jpg')),
     })
   )
   mesh.rotation.x = - Math.PI * 0.5
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.receiveShadow = true
-  mesh.name = 'floor'
+  mesh.name = 'wood-floor'
+  scene.add(mesh)
+  return mesh
+}
+
+const createCarpet = (scene: THREE.Scene) => {
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(measure - 2 * floorOffset, measure - 2 * floorOffset),
+    new THREE.MeshStandardMaterial({
+      color: 0xdddddd,
+      map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg')),
+      normalMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/normal.jpg')),
+      aoMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/ao.jpg')),
+      aoMapIntensity: 0.7,
+      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/rough.jpg')),
+    })
+  )
+  mesh.rotation.x = -Math.PI * 0.5
+  mesh.position.y += 0.01
+  mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
+  mesh.receiveShadow = true
+  mesh.name = 'carpet'
   scene.add(mesh)
   return mesh
 }
@@ -116,7 +129,7 @@ const createNavigationMarker = (scene: THREE.Scene) => {
   const baseMaterial = new THREE.MeshBasicMaterial({
     color: '#ffffff',
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.15,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   })
@@ -167,7 +180,7 @@ const initMoveCamera = (
   const onMarkerVerification = () => {
     shot(
       (point: THREE.Vector3) => {
-        marker.position.set(point.x, point.y + 0.01, point.z)
+        marker.position.set(point.x, point.y + 0.02, point.z)
         marker.visible = true
       },
       () => marker.visible = false
@@ -175,15 +188,14 @@ const initMoveCamera = (
   }
 
   let isActiveMouseMove = true
-  const onMouseMove = _.throttle((event: MouseEvent) => {
+
+  window.addEventListener('mousemove', _.throttle((event: MouseEvent) => {
     if (!isActiveMouseMove) {
       return
     }
     event.preventDefault()
     onMarkerVerification()
-  }, 40)
-
-  window.addEventListener('mousemove', onMouseMove)
+  }, 40))
 
   const onMotionAnimation = () => {
     shot((point: THREE.Vector3) => {
@@ -202,7 +214,7 @@ const initMoveCamera = (
       timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
         duration: 0.2,
         ease: "power2.inOut",
-        opacity: 0.2,
+        opacity: 0.15,
         repeat: 1,
         yoyo: true,
       }, "start")
@@ -215,12 +227,10 @@ const initMoveCamera = (
     })
   }
 
-  const onContextMenu = (event: MouseEvent) => {
+  window.addEventListener('contextmenu', (event: MouseEvent) => {
     event.preventDefault()
     onMotionAnimation()
-  }
-
-  window.addEventListener('contextmenu', onContextMenu)
+  })
 }
 
 initScene({})(({ scene, camera, renderer, orbitControls }) => {
@@ -232,7 +242,8 @@ initScene({})(({ scene, camera, renderer, orbitControls }) => {
   const updateControl = useControl(camera, orbitControls)
 
   const bottomMeshes: THREE.Mesh[] = [
-    createFloor(scene),
+    createCarpet(scene),
+    createWoodFloor(scene),
     createTestCube(scene)
   ]
   createWalls(scene)
