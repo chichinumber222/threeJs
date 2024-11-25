@@ -181,14 +181,8 @@ const initMoveCamera = (
     const intersected = raycaster.intersectObjects(objectsToIntersect)
     if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
       const point = intersected[0].point
-      const widthWithOffset = (measure / 2) - floorOffset
-      if (
-        point.x > -widthWithOffset && point.x < widthWithOffset &&
-        point.z > -widthWithOffset && point.z < widthWithOffset
-      ) {
-        success(point)
-        return
-      }
+      success(point)
+      return
     }
     fail?.()
   }
