@@ -7,6 +7,36 @@ import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
 
+interface ActionParams {
+  camera: THREE.PerspectiveCamera
+  point: THREE.Vector3
+  orbitControls?: OrbitControls
+  markers?: (THREE.Mesh | THREE.Group)[]
+  enableEventHandlers?: (value: boolean) => void
+}
+
+interface HoverEnabledParams {
+  enable: true
+  markers: (THREE.Mesh | THREE.Group)[]
+  point: THREE.Vector3
+}
+
+interface HoverDisabledParams {
+  enable: false
+  markers: (THREE.Mesh | THREE.Group)[]
+}
+
+type HoverParams = HoverEnabledParams | HoverDisabledParams
+
+interface Actions {
+  leftClick?: (params: ActionParams) => void
+  rightClick?: (params: ActionParams) => void
+  hover?: (params: HoverParams) => void
+}
+
+type ActionsMap = Map<string, Actions>
+type ObjectsMap = Map<string, THREE.Object3D>
+
 const props: InitSceneProps = {
   disableDefaultLights: true,
 }
@@ -18,6 +48,12 @@ const mouse = onChangeCursor()
 const measure = 10
 const offset = 0.1
 const floorOffset = 0.9
+
+const markObject = (currentObject: THREE.Object3D) => {
+  const uniqId = THREE.MathUtils.generateUUID()
+  currentObject.traverse((child) => child.userData.id = uniqId)
+  return uniqId
+}
 
 const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
   const direction = new THREE.Vector3()
@@ -59,10 +95,9 @@ const createWoodFloor = (scene: THREE.Scene) => {
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.name = 'wood-floor'
   scene.add(mesh)
-  return mesh
 }
 
-const createCarpet = (scene: THREE.Scene) => {
+const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(measure - 2 * floorOffset, measure - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
@@ -80,7 +115,60 @@ const createCarpet = (scene: THREE.Scene) => {
   mesh.receiveShadow = true
   mesh.name = 'carpet'
   scene.add(mesh)
-  return mesh
+  const id = markObject(mesh)
+  const rightClickAction = ({ point, orbitControls, enableEventHandlers, markers, camera }: ActionParams) => {
+    const timeline = gsap.timeline({
+      onStart: () => {
+        if (orbitControls) orbitControls.enabled = false
+        enableEventHandlers?.(false)
+      },
+      onComplete: () => {
+        if (orbitControls) orbitControls!.enabled = true
+        enableEventHandlers?.(true)
+      },
+    })
+    timeline.addLabel("start", 0)
+    if (markers?.length) {
+      const floorMarker = markers[0]
+      const floorMarkerBase = floorMarker.children[0] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>
+      const floorMarkerSecondary = floorMarker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>
+      timeline.to(floorMarkerBase.scale, {
+        duration: 0.2,
+        x: 1.2,
+        y: 1.2,
+        ease: "power2.inOut",
+        repeat: 1,
+        yoyo: true,
+      }, "start")
+      timeline.to(floorMarkerSecondary.material, {
+        duration: 0.2,
+        ease: "power2.inOut",
+        opacity: 0.15,
+        repeat: 1,
+        yoyo: true,
+      }, "start")
+    }
+    timeline.to(camera.position, {
+      duration: 0.7,
+      ease: "power2.inOut",
+      x: point.x,
+      z: point.z,
+    }, "start+=0.15")
+  }
+  const hoverAction = (params: HoverParams) => {
+    const floorMarker = params.markers[0]
+    if (params.enable) {
+      floorMarker.position.set(params.point.x, params.point.y + 0.025, params.point.z)
+      floorMarker.visible = true
+      return
+    }
+    floorMarker.visible = false
+  }
+  actionsMap.set(id, {
+    rightClick: rightClickAction,
+    hover: hoverAction,
+  })
+  objectsMap.set(id, mesh)
 }
 
 const createWalls = (scene: THREE.Scene) => {
@@ -109,7 +197,6 @@ const createWalls = (scene: THREE.Scene) => {
   wallEast.rotation.set(0, Math.PI / 2, 0)
   wallEast.name = 'wall-east'
   scene.add(wallNorth, wallSouth, wallWest, wallEast)
-  return [wallNorth, wallSouth, wallWest, wallEast]
 }
 
 const createCeiling = (scene: THREE.Scene) => {
@@ -125,17 +212,25 @@ const createCeiling = (scene: THREE.Scene) => {
   mesh.position.set(0, (measure / 3) - offset, 0)
   mesh.name = 'ceiling'
   scene.add(mesh)
-  return mesh
 }
 
-const createPictureModel = (scene: THREE.Scene) => {
+const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/picture.gltf/fancy_picture_frame_01_2k.gltf', (gltf) => {
     const picture = gltf.scene
-    console.log('picture :>> ', picture)
     picture.scale.set(2.5, 2.5, 2.5)
     picture.position.set(-2, 2, -4.85)
     picture.castShadow = true
     scene.add(picture)
+    const id = markObject(picture)
+    const leftClickAction = () => console.log('picture left click')
+    const rightClickAction = () => console.log('picture right click')
+    const hoverAction = ({ enable }: HoverParams) => console.log('picture hover', enable)
+    actionsMap.set(id, {
+      leftClick: leftClickAction,
+      rightClick: rightClickAction,
+      hover: hoverAction,
+    })
+    objectsMap.set(id, picture)
   }, undefined, function (error) {
     console.error('error picture', error)
   })
@@ -170,94 +265,80 @@ const createNavigationMarker = (scene: THREE.Scene) => {
   return group
 }
 
-const initMoveCamera = (
+const initActions = (
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  objectsToIntersect: THREE.Mesh[],
+  objectsMap: ObjectsMap,
+  actionsMap: ActionsMap,
   orbitControls?: OrbitControls,
 ) => {
-  const shot = (success: (point: THREE.Vector3) => void, fail?: () => void) => {
+  const floorMarker = createNavigationMarker(scene)
+  const markers = [floorMarker]
+  let isActiveHover = true
+  let isActiveRightClick = true
+  let isActiveLeftClick = true
+  const enableEventHandlers = (value: boolean) => {
+    isActiveHover = value
+    isActiveRightClick = value
+    isActiveLeftClick = value
+  }
+
+  let prevActiveId: string | null = null
+  const hover = (event?: MouseEvent) => {
+    if (!isActiveHover) {
+      return
+    }
+    event?.preventDefault()
+    if (prevActiveId !== null) {
+      actionsMap.get(prevActiveId)?.hover?.({ enable: false, markers })
+      prevActiveId = null
+    }
     raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects(objectsToIntersect)
-    if (intersected.length && intersected[0].object === objectsToIntersect[0]) {
-      const point = intersected[0].point
-      success(point)
+    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    if (intersected.length) {
+      const { point, object } = intersected[0]
+      const actions = actionsMap.get(object.userData.id)
+      actions?.hover?.({ enable: true, point, markers })
+      prevActiveId = object.userData.id
+    }
+  }
+  window.addEventListener('mousemove', _.throttle(hover, 40))
+
+  const rightClick = (event?: MouseEvent) => {
+    if (!isActiveRightClick) {
       return
     }
-    fail?.()
-  }
-
-  const marker = createNavigationMarker(scene)
-
-  const onMarkerVerification = () => {
-    shot(
-      (point: THREE.Vector3) => {
-        marker.position.set(point.x, point.y + 0.025, point.z)
-        marker.visible = true
-      },
-      () => marker.visible = false
-    )
-  }
-
-  let isActiveMouseMove = true
-
-  window.addEventListener('mousemove', _.throttle((event: MouseEvent) => {
-    if (!isActiveMouseMove) {
-      return
-    }
-    event.preventDefault()
-    onMarkerVerification()
-  }, 40))
-
-  const onMotionAnimation = () => {
-    shot((point: THREE.Vector3) => {
-      const timeline = gsap.timeline({
-        onStart: () => {
-          if (orbitControls) orbitControls.enabled = false
-          isActiveMouseMove = false
-          isActiveContextMenu = false
-        },
-        onComplete: () => {
-          if (orbitControls) orbitControls!.enabled = true
-          isActiveMouseMove = true
-          isActiveContextMenu = true
-          onMarkerVerification()
-        },
+    event?.preventDefault()
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    if (intersected.length) {
+      const { point, object } = intersected[0]
+      const actions = actionsMap.get(object.userData.id)
+      actions?.rightClick?.({
+        camera, point, orbitControls, markers, enableEventHandlers
       })
-      timeline.addLabel("start", 0)
-      timeline.to((marker.children[0] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).scale, {
-        duration: 0.2,
-        x: 1.2,
-        y: 1.2,
-        ease: "power2.inOut",
-        repeat: 1,
-        yoyo: true,
-      }, "start")
-      timeline.to((marker.children[1] as THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>).material, {
-        duration: 0.2,
-        ease: "power2.inOut",
-        opacity: 0.15,
-        repeat: 1,
-        yoyo: true,
-      }, "start")
-      timeline.to(camera.position, {
-        duration: 0.7,
-        ease: "power2.inOut",
-        x: point.x,
-        z: point.z,
-      }, "start+=0.15")
-    })
+    }
   }
+  window.addEventListener('contextmenu', rightClick)
 
-  let isActiveContextMenu = true
-
-  window.addEventListener('contextmenu', (event: MouseEvent) => {
-    if (!isActiveContextMenu) {
+  const leftClick = (event?: MouseEvent) => {
+    if (!isActiveLeftClick) {
       return
     }
-    event.preventDefault()
-    onMotionAnimation()
-  })
+    event?.preventDefault()
+    raycaster.setFromCamera(mouse, camera)
+    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    if (intersected.length) {
+      const { point, object } = intersected[0]
+      const actions = actionsMap.get(object.userData.id)
+      actions?.leftClick?.({
+        camera, point, orbitControls, markers, enableEventHandlers
+      })
+    }
+  }
+  window.addEventListener('click', leftClick)
+
+  return [hover, leftClick, rightClick]
 }
 
 const createLight = (scene: THREE.Scene) => {
@@ -292,22 +373,31 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   const updateControl = useControl(camera, orbitControls)
 
-  const bottomMeshes: THREE.Mesh[] = [
-    createCarpet(scene),
-    createWoodFloor(scene),
-  ]
+  const objectsMap: ObjectsMap = new Map()
+  const actionsMap: ActionsMap = new Map()
+
+  createPictureModel(scene, objectsMap, actionsMap)
+  createCarpet(scene, objectsMap, actionsMap)
+  createWoodFloor(scene)
   createWalls(scene)
   createCeiling(scene)
 
-  createPictureModel(scene)
-
-  initMoveCamera(scene, camera, bottomMeshes, orbitControls)
-
   createLight(scene)
 
+  const [hover] = initActions(scene, camera, objectsMap, actionsMap, orbitControls)
+
+  let frameCounter = 0
   function animate() {
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
+
+    // because hover should be not only mousemove handler
+    if (frameCounter > 20) {
+      hover()
+      frameCounter = 0
+    }
+    frameCounter++
+
     updateControl()
     stats.update()
   }
