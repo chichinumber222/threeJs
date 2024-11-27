@@ -128,12 +128,16 @@ const descriptionModeAnimation = (stopPosition: THREE.Vector3, stopQuaternion: T
     }
   })
   timeline.addLabel("start", 0)
-  timeline.to(camera.quaternion, {
+  const startQuaternion = camera.quaternion.clone()
+  const endQuaternion = stopQuaternion.clone()
+  timeline.to({ t: 0 }, {
     duration: 1.5,
+    t: 1,
     ease: "power2.inOut",
-    x: stopQuaternion.x,
-    z: stopQuaternion.z,
-    y: stopQuaternion.y,
+    onUpdate: function () {
+      const t = this.targets()[0].t
+      camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
+    }
   }, "start")
   timeline.to(camera.position, {
     duration: 1.5,
