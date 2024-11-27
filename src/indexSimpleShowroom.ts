@@ -100,7 +100,12 @@ const getRepeatableTexture = (texture: THREE.Texture, repeatCount?: number) => {
   return texture
 }
 
-const descriptionModeAnimation = (stopPosition: THREE.Vector3, stopQuaternion: THREE.Quaternion, description: string, actionParams: ActionParams) => {
+const descriptionModeAnimation = (
+  stopPosition: THREE.Vector3,
+  stopQuaternion: THREE.Quaternion,
+  description: string,
+  actionParams: ActionParams
+) => {
   const { enableEventHandlers, orbitControls, camera } = actionParams
   positions.last?.copy(camera.position)
   quaternions.last?.copy(camera.quaternion)
