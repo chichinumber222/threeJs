@@ -12,7 +12,7 @@ interface ActionParams {
   point: THREE.Vector3
   orbitControls?: OrbitControls
   markers?: (THREE.Mesh | THREE.Group)[]
-  enableEventHandlers?: (value: boolean) => void
+  enableEventHandlers: (value: boolean) => void
 }
 
 interface HoverEnabledParams {
@@ -37,8 +37,19 @@ interface Actions {
 type ActionsMap = Map<string, Actions>
 type ObjectsMap = Map<string, THREE.Object3D>
 
+interface Positions {
+  start: THREE.Vector3,
+  last: THREE.Vector3
+}
+
+interface Quaternions {
+  start: THREE.Quaternion
+  last: THREE.Quaternion
+}
+
 const props: InitSceneProps = {
   disableDefaultLights: true,
+  canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
 }
 
 const textureLoader = new THREE.TextureLoader()
@@ -48,6 +59,14 @@ const mouse = onChangeCursor()
 const measure = 10
 const offset = 0.1
 const floorOffset = 0.9
+const positions: Positions = {
+  start: new THREE.Vector3(1, 1, 1),
+  last: new THREE.Vector3(1, 1, 1),
+}
+const quaternions: Quaternions = {
+  start: new THREE.Quaternion(0, 0, 0),
+  last: new THREE.Quaternion(0, 0, 0),
+}
 
 const markObject = (currentObject: THREE.Object3D) => {
   const uniqId = THREE.MathUtils.generateUUID()
@@ -79,6 +98,50 @@ const getRepeatableTexture = (texture: THREE.Texture, repeatCount?: number) => {
   texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(count, count)
   return texture
+}
+
+const descriptionModeAnimation = (stopPosition: THREE.Vector3, stopQuaternion: THREE.Quaternion, description: string, actionParams: ActionParams) => {
+  const { enableEventHandlers, orbitControls, camera } = actionParams
+  positions.last?.copy(camera.position)
+  quaternions.last?.copy(camera.quaternion)
+  enableEventHandlers(false)
+  if (orbitControls) orbitControls.enabled = false
+  const timeline = gsap.timeline({
+    onComplete: () => {
+      const textElement = <HTMLElement>document.getElementById('text')
+      textElement.innerText = `${description}`
+      textElement.style.display = 'block'
+      const exitButtonElement = <HTMLElement>document.getElementById('exit_button')
+      const exit = (event: MouseEvent) => {
+        event.stopPropagation()
+        camera.position.copy(positions.last || positions.start)
+        camera.quaternion.copy(quaternions.last || quaternions.start)
+        enableEventHandlers(true)
+        if (orbitControls) orbitControls.enabled = true
+        textElement.style.display = 'none'
+        textElement.innerText = ''
+        exitButtonElement.style.display = 'none'
+        exitButtonElement.removeEventListener('click', exit)
+      }
+      exitButtonElement.addEventListener('click', exit)
+      exitButtonElement.style.display = 'block'
+    }
+  })
+  timeline.addLabel("start", 0)
+  timeline.to(camera.quaternion, {
+    duration: 1.5,
+    ease: "power2.inOut",
+    x: stopQuaternion.x,
+    z: stopQuaternion.z,
+    y: stopQuaternion.y,
+  }, "start")
+  timeline.to(camera.position, {
+    duration: 1.5,
+    ease: "power2.inOut",
+    x: stopPosition.x,
+    z: stopPosition.z,
+    y: stopPosition.y,
+  }, "start")
 }
 
 const createWoodFloor = (scene: THREE.Scene) => {
@@ -115,16 +178,15 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
   mesh.receiveShadow = true
   mesh.name = 'carpet'
   scene.add(mesh)
-  const id = markObject(mesh)
   const rightClickAction = ({ point, orbitControls, enableEventHandlers, markers, camera }: ActionParams) => {
     const timeline = gsap.timeline({
       onStart: () => {
         if (orbitControls) orbitControls.enabled = false
-        enableEventHandlers?.(false)
+        enableEventHandlers(false)
       },
       onComplete: () => {
         if (orbitControls) orbitControls!.enabled = true
-        enableEventHandlers?.(true)
+        enableEventHandlers(true)
       },
     })
     timeline.addLabel("start", 0)
@@ -164,6 +226,7 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
     }
     floorMarker.visible = false
   }
+  const id = markObject(mesh)
   actionsMap.set(id, {
     rightClick: rightClickAction,
     hover: hoverAction,
@@ -216,21 +279,44 @@ const createCeiling = (scene: THREE.Scene) => {
 
 const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/picture.gltf/fancy_picture_frame_01_2k.gltf', (gltf) => {
-    const picture = gltf.scene
-    picture.scale.set(2.5, 2.5, 2.5)
-    picture.position.set(-2, 2, -4.85)
-    picture.castShadow = true
-    scene.add(picture)
-    const id = markObject(picture)
-    const leftClickAction = () => console.log('picture left click')
-    const rightClickAction = () => console.log('picture right click')
-    const hoverAction = ({ enable }: HoverParams) => console.log('picture hover', enable)
+    const model = gltf.scene
+    model.scale.set(2.5, 2.5, 2.5)
+    model.position.set(-2, 2, -4.85)
+    model.castShadow = true
+    scene.add(model)
+    const description = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque?'
+    const cameraStopPosition = new THREE.Vector3(-1.4, 1.92, -3.7)
+    const cameraStopQuaternion = new THREE.Quaternion(0.04, 0, 0)
+    const id = markObject(model)
     actionsMap.set(id, {
-      leftClick: leftClickAction,
-      rightClick: rightClickAction,
-      hover: hoverAction,
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(cameraStopPosition, cameraStopQuaternion, description, params)
+      }
     })
-    objectsMap.set(id, picture)
+    objectsMap.set(id, model)
+  }, undefined, function (error) {
+    console.error('error picture', error)
+  })
+}
+
+const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+  gltfLoader.load('./static/gltf/dartboard.gltf/dartboard_1k.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(2, 2, 2)
+    model.position.set(4.85, 2, -1)
+    model.rotation.set(0, -Math.PI / 2, 0)
+    model.castShadow = true
+    scene.add(model)
+    const description = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque?'
+    const cameraStopPosition = new THREE.Vector3(4.21, 1.92, -0.3)
+    const cameraStopQuaternion = new THREE.Quaternion(0.04, -0.59, 0.03, 0.8)
+    const id = markObject(model)
+    actionsMap.set(id, {
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(cameraStopPosition, cameraStopQuaternion, description, params)
+      },
+    })
+    objectsMap.set(id, model)
   }, undefined, function (error) {
     console.error('error picture', error)
   })
@@ -366,7 +452,8 @@ const createLight = (scene: THREE.Scene) => {
 }
 
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
-  camera.position.set(1, 0.8, 1)
+  camera.position.copy(positions.start)
+  camera.quaternion.copy(quaternions.start)
   orbitControls!.rotateSpeed = -0.5
   orbitControls!.enableZoom = false
   orbitControls!.enablePan = false
@@ -377,6 +464,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   const actionsMap: ActionsMap = new Map()
 
   createPictureModel(scene, objectsMap, actionsMap)
+  createDartBoardModel(scene, objectsMap, actionsMap)
   createCarpet(scene, objectsMap, actionsMap)
   createWoodFloor(scene)
   createWalls(scene)
