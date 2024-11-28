@@ -35,43 +35,43 @@ const getSceneProps = (scene: THREE.Scene) => ({
 
 const handleBackgroundChange = (value: typeof backgroundValues[number], scene: THREE.Scene) => {
   switch (value) {
-  case 'White':
-    scene.background = new THREE.Color(0xffffff)
-    break
-  case 'Black':
-    scene.background = new THREE.Color(0x000000)
-    break
-  case 'Null':
-    scene.background = null
-    break
-  case 'Color':
-    scene.background = new THREE.Color(0x44ff44)
-    break
-  case 'Texture':
-    textureLoader.load(TextureImg, (loaded) => {
-      loaded.colorSpace = THREE.SRGBColorSpace
-      scene.background = loaded
-      scene.environment = null
-    })
-    break
-  case 'Cubemap':
-    textureLoader.load(Cubemap, (loaded) => {
-      loaded.mapping = THREE.EquirectangularReflectionMapping
-      scene.background = loaded
-      scene.environment = loaded
-      // scene.traverse((mesh) => {
-      //     if (mesh instanceof THREE.Mesh) {
-      //        if (Array.isArray(mesh.material)) {
-      //             mesh.material.forEach(material => material.envMap = loaded)
-      //        } else {
-      //             mesh.material.envMap = loaded
-      //        }
-      //     }
-      // })
-    })
-    break
-  default:
-    break
+    case 'White':
+      scene.background = new THREE.Color(0xffffff)
+      break
+    case 'Black':
+      scene.background = new THREE.Color(0x000000)
+      break
+    case 'Null':
+      scene.background = null
+      break
+    case 'Color':
+      scene.background = new THREE.Color(0x44ff44)
+      break
+    case 'Texture':
+      textureLoader.load(TextureImg, (loaded) => {
+        loaded.colorSpace = THREE.SRGBColorSpace
+        scene.background = loaded
+        scene.environment = null
+      })
+      break
+    case 'Cubemap':
+      textureLoader.load(Cubemap, (loaded) => {
+        loaded.mapping = THREE.EquirectangularReflectionMapping
+        scene.background = loaded
+        scene.environment = loaded
+        // scene.traverse((mesh) => {
+        //     if (mesh instanceof THREE.Mesh) {
+        //        if (Array.isArray(mesh.material)) {
+        //             mesh.material.forEach(material => material.envMap = loaded)
+        //        } else {
+        //             mesh.material.envMap = loaded
+        //        }
+        //     }
+        // })
+      })
+      break
+    default:
+      break
   }
 }
 

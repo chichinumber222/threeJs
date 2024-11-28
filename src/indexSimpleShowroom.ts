@@ -130,30 +130,30 @@ const descriptionModeAnimation = (
       let textElement: HTMLElement | null = null
       let exitButtonElement: HTMLElement | null = null
       switch (descriptionOptions.position) {
-      case 'left': {
-        textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
-        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
-        textElement.style.width = descriptionOptions?.width || '35%'
-        break
-      }
-      case 'right': {
-        textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
-        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
-        textElement.style.width = descriptionOptions?.width || '35%'
-        break
-      }
-      case 'top': {
-        textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
-        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
-        textElement.style.height = descriptionOptions?.height || '25%'
-        break
-      }
-      case 'bottom': {
-        textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
-        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
-        textElement.style.height = descriptionOptions?.height || '25%'
-        break
-      }
+        case 'left': {
+          textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+          textElement.style.width = descriptionOptions?.width || '35%'
+          break
+        }
+        case 'right': {
+          textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
+          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
+          textElement.style.width = descriptionOptions?.width || '35%'
+          break
+        }
+        case 'top': {
+          textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
+          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
+          textElement.style.height = descriptionOptions?.height || '25%'
+          break
+        }
+        case 'bottom': {
+          textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
+          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
+          textElement.style.height = descriptionOptions?.height || '25%'
+          break
+        }
       }
       textElement.innerHTML = `${descriptionOptions.text}`
       const exit = (event: MouseEvent) => {
