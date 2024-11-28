@@ -47,6 +47,20 @@ interface Quaternions {
   last: THREE.Quaternion
 }
 
+interface DescriptionOptionsTopBottom {
+  text: string
+  position: 'top' | 'bottom'
+  height?: string
+}
+
+interface DescriptionOptionsLeftRight {
+  text: string
+  position: 'left' | 'right'
+  width?: string
+}
+
+type DescriptionOptions = DescriptionOptionsTopBottom | DescriptionOptionsLeftRight
+
 const props: InitSceneProps = {
   disableDefaultLights: true,
   canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
@@ -101,10 +115,10 @@ const getRepeatableTexture = (texture: THREE.Texture, repeatCount?: number) => {
 }
 
 const descriptionModeAnimation = (
+  actionParams: ActionParams,
   stopPosition: THREE.Vector3,
   stopQuaternion: THREE.Quaternion,
-  description: string,
-  actionParams: ActionParams
+  descriptionOptions: DescriptionOptions,
 ) => {
   const { enableEventHandlers, orbitControls, camera } = actionParams
   positions.last?.copy(camera.position)
@@ -113,23 +127,49 @@ const descriptionModeAnimation = (
   if (orbitControls) orbitControls.enabled = false
   const timeline = gsap.timeline({
     onComplete: () => {
-      const textElement = <HTMLElement>document.getElementById('text')
-      textElement.innerText = `${description}`
-      textElement.style.display = 'block'
-      const exitButtonElement = <HTMLElement>document.getElementById('exit_button')
+      let textElement: HTMLElement | null = null
+      let exitButtonElement: HTMLElement | null = null
+      switch (descriptionOptions.position) {
+      case 'left': {
+        textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+        textElement.style.width = descriptionOptions?.width || '35%'
+        break
+      }
+      case 'right': {
+        textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
+        textElement.style.width = descriptionOptions?.width || '35%'
+        break
+      }
+      case 'top': {
+        textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
+        textElement.style.height = descriptionOptions?.height || '25%'
+        break
+      }
+      case 'bottom': {
+        textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
+        textElement.style.height = descriptionOptions?.height || '25%'
+        break
+      }
+      }
+      textElement.innerHTML = `${descriptionOptions.text}`
       const exit = (event: MouseEvent) => {
         event.stopPropagation()
         camera.position.copy(positions.last || positions.start)
         camera.quaternion.copy(quaternions.last || quaternions.start)
         enableEventHandlers(true)
         if (orbitControls) orbitControls.enabled = true
-        textElement.style.display = 'none'
-        textElement.innerText = ''
-        exitButtonElement.style.display = 'none'
+        textElement.classList.add('no_visible')
+        exitButtonElement.classList.add('no_visible')
+        textElement.innerHTML = ``
         exitButtonElement.removeEventListener('click', exit)
       }
       exitButtonElement.addEventListener('click', exit)
-      exitButtonElement.style.display = 'block'
+      textElement.classList.remove('no_visible')
+      exitButtonElement.classList.remove('no_visible')
     }
   })
   timeline.addLabel("start", 0)
@@ -293,13 +333,13 @@ const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsM
     model.position.set(-2, 2, -4.85)
     model.castShadow = true
     scene.add(model)
-    const description = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque?'
+    const descriptionText = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. <br><br> Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. <br><br> Placeat ullam explicabo rem harum cumque?'
     const cameraStopPosition = new THREE.Vector3(-1.4, 1.92, -3.7)
     const cameraStopQuaternion = new THREE.Quaternion(0.04, 0, 0)
     const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(cameraStopPosition, cameraStopQuaternion, description, params)
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right', width: '10%' })
       }
     })
     objectsMap.set(id, model)
@@ -316,13 +356,13 @@ const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, action
     model.rotation.set(0, -Math.PI / 2, 0)
     model.castShadow = true
     scene.add(model)
-    const description = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque?'
+    const descriptionText = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit.'
     const cameraStopPosition = new THREE.Vector3(4.21, 1.92, -0.3)
     const cameraStopQuaternion = new THREE.Quaternion(0.04, -0.59, 0.03, 0.8)
     const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(cameraStopPosition, cameraStopQuaternion, description, params)
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
       },
     })
     objectsMap.set(id, model)

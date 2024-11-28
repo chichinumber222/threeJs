@@ -10,58 +10,71 @@ body {
     left: 0;
 }
 
-#exit_button {
-    display: none;
+.text {
+    display: block;
     position: fixed;
-    bottom: 5%;
-    right: 5%;
-    background-color: transparent;
-    border: 1px solid #222222;
-    border-radius: 8px;
-    box-sizing: border-box;
-    color: #222222;
-    cursor: pointer;
-    font-family: Circular,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 15px;
-    margin: 0;
-    outline: none;
-    padding: 8px 15px;
-    text-align: center;
-    text-decoration: none;
-    touch-action: manipulation;
-    transition: box-shadow .2s,-ms-transform .1s,-webkit-transform .1s,transform .1s;
-    user-select: none;
-    -webkit-user-select: none;
-    width: auto;
-}
-
-#exit_button:focus-visible {
-    box-shadow: #222222 0 0 0 2px, rgba(255, 255, 255, 0.8) 0 0 0 4px;
-    transition: box-shadow .2s;
-}
-
-#exit_button:active {
-    background-color: #F7F7F7;
-    border-color: #000000;
-    transform: scale(.96);
-}
-
-#exit_button:disabled {
-    border-color: #DDDDDD;
-    color: #DDDDDD;
-    cursor: not-allowed;
-    opacity: 1;
-}
-
-#text {
-    width: 35%;
-    display: none;
-    position: fixed;
-    top: 10%;
-    right: 5%;
     text-wrap: pretty;
+    text-align: justify;
     font-size: 1.2rem;
     font-family: Arial, Helvetica, sans-serif;
+    overflow : auto;
+}
+
+.text_left, .text_right {
+    top: 10%;
+    max-height: 75%;
+}
+
+.text_left {
+    left: 5%;
+}
+
+.text_right {
+    right: 5%;
+}
+
+.text_top, .text_bottom {
+    left: 5%;
+    right: 5%;
+}
+
+.text_top {
+    top: 5%;
+}
+
+.text_bottom {
+    bottom: 5%;
+}
+
+.exit {
+    display: inline-block;
+    all: unset;
+    position: fixed;
+    cursor: pointer;
+    background-color: transparent;
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    padding: 4px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.exit_left, .exit_right {
+    bottom: 7%;
+    left: 50%;
+    transform: translate(-50%);
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+.exit_top, .exit_bottom {
+    left: 7%;
+    top: 50%;
+    transform: translate(0, -50%);
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+.no_visible {
+    display: none;
 }
