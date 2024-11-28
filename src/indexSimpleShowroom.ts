@@ -6,6 +6,7 @@ import gsap from 'gsap'
 import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
+import { isMobile } from "./utils/is-mobile"
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -407,8 +408,6 @@ const initActions = (
   actionsMap: ActionsMap,
   orbitControls?: OrbitControls,
 ) => {
-  const floorMarker = createNavigationMarker(scene)
-  const markers = [floorMarker]
   let isActiveHover = true
   let isActiveRightClick = true
   let isActiveLeftClick = true
@@ -417,6 +416,8 @@ const initActions = (
     isActiveRightClick = value
     isActiveLeftClick = value
   }
+  const floorMarker = createNavigationMarker(scene)
+  const markers = [floorMarker]
 
   let prevActiveId: string | null = null
   const hover = (event?: MouseEvent) => {
@@ -437,7 +438,9 @@ const initActions = (
       prevActiveId = object.userData.id
     }
   }
-  window.addEventListener('mousemove', _.throttle(hover, 40))
+  if (!isMobile()) {
+    window.addEventListener('mousemove', _.throttle(hover, 40))
+  }
 
   const rightClick = (event?: MouseEvent) => {
     if (!isActiveRightClick) {
@@ -528,12 +531,14 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
 
-    // because hover should be not only mousemove handler
-    if (frameCounter > 20) {
-      hover()
-      frameCounter = 0
+    if (!isMobile()) {
+      // because hover should be not only mousemove handler
+      if (frameCounter > 20) {
+        hover()
+        frameCounter = 0
+      }
+      frameCounter++
     }
-    frameCounter++
 
     updateControl()
     stats.update()
