@@ -339,7 +339,7 @@ const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsM
     const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right', width: '10%' })
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
       }
     })
     objectsMap.set(id, model)
@@ -357,8 +357,8 @@ const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, action
     model.castShadow = true
     scene.add(model)
     const descriptionText = 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit.'
-    const cameraStopPosition = new THREE.Vector3(4.21, 1.92, -0.3)
-    const cameraStopQuaternion = new THREE.Quaternion(0.04, -0.59, 0.03, 0.8)
+    const cameraStopPosition = new THREE.Vector3(4.13, 2.06, -1.57)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.02, -0.78, -0.03, 0.62)
     const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
