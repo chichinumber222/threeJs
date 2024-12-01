@@ -7,6 +7,9 @@ import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
 import { isMobile } from "./utils/is-mobile"
+import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
+import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
+import clockText from './static/texts/clock.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -71,7 +74,11 @@ const textureLoader = new THREE.TextureLoader()
 const gltfLoader = new GLTFLoader()
 const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
-const measure = 10
+const floorWidth = 10
+const floorLength = 10
+const wallHeight = 3.33
+const plinthHeight = 0.1
+const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
@@ -195,7 +202,7 @@ const descriptionModeAnimation = (
 
 const createWoodFloor = (scene: THREE.Scene) => {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 10),
+    new THREE.PlaneGeometry(floorWidth, floorLength),
     new THREE.MeshStandardMaterial({
       color: 0xcccccc,
       map: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/color.jpg'), 10, 10),
@@ -211,7 +218,7 @@ const createWoodFloor = (scene: THREE.Scene) => {
 
 const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(measure - 2 * floorOffset, measure - 2 * floorOffset),
+    new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
       map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg')),
@@ -284,42 +291,73 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
 }
 
 const createWalls = (scene: THREE.Scene) => {
-  const geometry = new THREE.PlaneGeometry(measure, measure / 3)
+  const geometry1 = new THREE.PlaneGeometry(floorWidth, wallHeight)
+  const geometry2 = new THREE.PlaneGeometry(floorLength, wallHeight)
   const material = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
     map: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/color.jpg'), 5, 2),
     normalMap: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/normal.jpg'), 5, 2),
     roughness: 0.35,
   })
-  const wallNorth = new THREE.Mesh(geometry, material)
-  wallNorth.position.set(0, (measure / 6) - offset, -((measure / 2) - offset))
+  const wallNorth = new THREE.Mesh(geometry1, material)
+  wallNorth.position.set(0, wallHeight / 2 - offset, -(floorLength / 2 - offset))
   wallNorth.name = 'wall-north'
-  const wallSouth = new THREE.Mesh(geometry, material)
-  wallSouth.position.set(0, (measure / 6) - offset, (measure / 2) - offset)
+  const wallSouth = new THREE.Mesh(geometry1, material)
+  wallSouth.position.set(0, wallHeight / 2 - offset, floorLength / 2 - offset)
   wallSouth.rotation.set(0, Math.PI, 0)
   wallSouth.name = 'wall-south'
-  const wallWest = new THREE.Mesh(geometry, material)
-  wallWest.position.set((measure / 2) - offset, (measure / 6) - offset, 0)
+  const wallWest = new THREE.Mesh(geometry2, material)
+  wallWest.position.set(floorWidth / 2 - offset, wallHeight / 2 - offset, 0)
   wallWest.rotation.set(0, -Math.PI / 2, 0)
   wallWest.name = 'wall-west'
-  const wallEast = new THREE.Mesh(geometry, material)
-  wallEast.position.set(-((measure / 2) - offset), (measure / 6) - offset, 0)
+  const wallEast = new THREE.Mesh(geometry2, material)
+  wallEast.position.set(-(floorWidth / 2 - offset), wallHeight / 2 - offset, 0)
   wallEast.rotation.set(0, Math.PI / 2, 0)
   wallEast.name = 'wall-east'
   scene.add(wallNorth, wallSouth, wallWest, wallEast)
 }
 
+const createPlinths = (scene: THREE.Scene) => {
+  const geometry1 = new THREE.BoxGeometry(floorWidth, plinthHeight, plinthDepth, 100, 50)
+  const geometry2 = new THREE.BoxGeometry(floorLength, plinthHeight, plinthDepth, 100, 50)
+  const material = new THREE.ShaderMaterial({
+    vertexShader: plinthVertexShader,
+    fragmentShader: plinthFragmentShader,
+    uniforms: {
+      vBoxHeight: {
+        value: plinthHeight,
+      }
+    } ,
+  })
+  const plinthNorth = new THREE.Mesh(geometry1, material)
+  plinthNorth.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
+  plinthNorth.name = 'plinth-north'
+  const plinthSouth = new THREE.Mesh(geometry1, material)
+  plinthSouth.position.set(0, plinthHeight / 2 + 0.001, floorLength / 2 - offset - plinthDepth / 2 - 0.001)
+  plinthSouth.rotation.set(0, Math.PI, 0)
+  plinthSouth.name = 'plinth-south'
+  const plinthWest = new THREE.Mesh(geometry2, material)
+  plinthWest.position.set(floorWidth / 2 - offset - plinthDepth / 2 - 0.001, plinthHeight / 2 + 0.001, 0)
+  plinthWest.rotation.set(0, -Math.PI / 2, 0)
+  plinthWest.name = 'plinth-west'
+  const plinthEast = new THREE.Mesh(geometry2, material)
+  plinthEast.position.set(-(floorWidth / 2 - offset - plinthDepth / 2 - 0.001), plinthHeight / 2 + 0.001, 0)
+  plinthEast.rotation.set(0, Math.PI / 2, 0)
+  plinthEast.name = 'plinth-east'
+  scene.add(plinthNorth, plinthSouth, plinthWest, plinthEast)
+}
+
 const createCeiling = (scene: THREE.Scene) => {
-  const geometry = new THREE.PlaneGeometry(measure, measure)
+  const geometry = new THREE.PlaneGeometry(floorWidth, floorLength)
   const material = new THREE.MeshStandardMaterial({
-    color: '#FCFBF4',
+    color: 0xffffff,
     map: getRepeatableTexture(textureLoader.load('static/textures/ceiling/color.jpg'), 4, 4),
     normalMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/normal.jpg'), 4, 4),
     roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/rough.jpg'), 4, 4),
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.set(Math.PI / 2, 0, 0)
-  mesh.position.set(0, (measure / 3) - offset, 0)
+  mesh.position.set(0, wallHeight - offset, 0)
   mesh.name = 'ceiling'
   scene.add(mesh)
 }
@@ -407,32 +445,16 @@ const createCameraModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMa
   })
 }
 
-const createPocketWatchModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
-  gltfLoader.load('./static/gltf/watch.gltf/vintage_pocket_watch_1k.gltf', (gltf) => {
+const createClockModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+  gltfLoader.load('./static/gltf/clock/mantel_clock_01_2k.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(1.4, 1.4, 1.4)
-    model.position.set(3.75, 0.82, -1.3)
-    model.rotation.set(-Math.PI / 2, 0, 0)
+    model.position.set(3.75, 0.81, -1.3)
+    model.rotation.set(0, -Math.PI / 2, 0)
     model.castShadow = true
     scene.add(model)
-    const descriptionText = `<b>Часы</b><br>В 1845 году к часам на церкви Святого Иоанна в Эксетере, на западе Англии, добавили интересное новшество — еще одну минутную стрелку, которая на четырнадцать минут опережала первую. По объяснению газеты Trewman’s Exeter Flying Post, это было «большое удобство для общества», так как теперь часы показывали «не только точное время в Эксетере, но и железнодорожное время».
-<br><br>Чувство времени всегда определялось движением планет. О «днях» и «годах» люди говорили задолго до того, как узнали, что Земля вращается вокруг своей оси и вокруг Солнца. Благодаря росту и убыванию луны возникло представление о месяцах. Движение солнца по небосводу показывало время дня. Но момент, когда солнце достигает высшей точки, зависит, конечно, от места наблюдения. Если вы окажетесь в Эксетере, это наступит примерно на четырнадцать минут позже по сравнению с Лондоном.
-<br><br>Естественно, когда часы стали обычной вещью, люди начали ставить их согласно наблюдениям за небом. Это было удобно для координации действий только с местными жителями. Если два человека живут в Эксетере и условятся встретиться в семь вечера, вряд ли имеет какое-то значе- ние, что в Лондоне, в 320 километрах от их местонахождения, полагают, что сейчас 7:14. Однако как только между Эксетером и Лондоном стали курсировать поезда, останавливающиеся во множестве других городков, в каждом из которых было свое представление о текущем времени, люди столкнулись с логистическим хаосом. Первые железнодорожные расписания информировали путешественников, что «время в Лондоне примерно на четыре минуты отстает от Рединга и на семь с половиной минут опережает время в Сайренсестере» и так далее, но многие пассажиры, понятное дело, безнадежно путались. Хуже того, путались машинисты и сигнальщики, что повышало риск крушений. Поэтому железные дороги перешли на «железнодорожное время».
-В основу было положено среднее время по Гринвичу, определяемое знаменитой обсерваторией в лондон- ском районе Гринвич.
-<br><br>Власти некоторых городов быстро уловили пользу стандартизации времени по всей стране и соответствующим образом скорректировали свои часы. Кое-кто обижался на столичное своеволие, держась за мысль, что их время — это «правильное время», как с очаровательным местечковым патриотизмом выразился Flying Post. Много лет декан Эксетера упрямо отказывался перевести часы на городском кафедральном соборе.
-<br><br>Конечно же, никакого «правильного времени» не существует. Как и в случае денег, польза от него есть, если только оно общепринято. Тем не менее точное измерение времени возможно. И оно случилось в 1656 году благодаря голландцу по имени Христиан Гюйгенс. Конечно, часы люди знали и до Гюйгенса. Самые разные цивилизации, от Древнего Египта до средневековой Персии, использовали водяные часы, другие отмеряли время по отметкам на свечах4. Но даже самые точные устрой- ства могли ошибаться на пятнадцать минут в день. Для монаха, который хочет определить время молитвы, это не имеет большого значения, если только Господь не ярый поборник пунктуальности. Но для одной области деятельности, которая становилась все более важной, возможность точно отмерять время имела огромное экономическое значение. Это мореплавание.
-<br><br>По высоте солнца над горизонтом моряки могли определить широту — местоположение с севера на юг. Но долготу, или расположение с востока на запад, им приходилось угадывать. Неправильная оценка могла при- вести — и часто приводила — к тому, что корабли приставали к берегу в сотнях километров от определенного штурманом места. Иногда они в буквальном смысле натыкались на землю и тонули.
-<br><br>Чем здесь могло помочь точное измерение времени? Помните, почему время на часах в Эксетере отличалось от времени в удаленном на не- сколько сот километров Лондоне? Полдень там настает на четырнадцать минут позже. Если знать, когда наступает полдень в Гринвичской обсер- ватории в Лондоне или любой другой ориентирной точке, можно на ос- нове наблюдений за солнцем вычислить разницу во времени и понять расстояние. Маятниковые часы Гюйгенса были в шестьдесят раз точнее любого предшествующего устройства, но даже пятнадцать секунд в день за долгое морское плавание складываются в десятки минут, а ведь маят- ник на палубе корабля качается не очень равномерно.
-<br><br>Правители морских государств остро осознавали проблему долготы. Примерно за век до появления изобретения Гюйгенса король Испании учредил награду за решение этой проблемы. Широко известно, что более поздняя награда, предложенная британским правительством, заставила англичанина Джона Гаррисона кропотливо совершенствовать часы и получить в 1700-х годах довольно точное устройство*. Оно отмеряло время с отклонением в пару секунд в день.
-<br><br>Со времен Гюйгенса и Гаррисона часы становились все точнее. А после того как сдался непримиримый декан Эксетера, весь мир пришел к согла- шению в отношении «правильного времени»: им стали считать всемирное координированное время (Сoordinated Universal Time), или UTC, с различ- ными глобальными часовыми поясами, благодаря которым двенадцать часов дня теперь хотя бы примерно соответствуют высшей точке солнца. В основе UTC — атомные часы, измеряющие колебания энергии электро- нов. Сами Главные часы, которые обслуживает Военно-морская обсерва- тория США на северо-западе Вашингтона, представляют собой комплекс из нескольких часовых механизмов, самый совершенный из которых — четверо «фонтанных» атомных часов, в которых замороженные атомы под- нимаются в воздух и опадают вниз. Если что-то пойдет не так — например, вошедший в помещение технолог изменит температуру и, возможно, время, — несколько запасных механизмов готовы в любую наносекунду взять работу на себя. Эти сложные методики позволяют достичь точности до секунды каждые 300 миллионов лет.
-<br><br>Есть ли смысл в такой точности? Ведь утреннюю поездку на работу мы не планируем до миллисекунд. Смысл точных наручных часов всегда был не в практичности, а в престиже. Более века до появления часовых сигна- лов в первых радиопередачах члены лондонского семейства Белвилл за- рабатывали на жизнь, каждое утро устанавливая свои часы по Гринвичу и за умеренную плату «продавая время» по всему городу. Их клиентами в основном являлись торговцы часами, для которых синхронизация своего товара по Гринвичу была делом профессиональной чести.
-<br><br>Кое-где значение имеет даже миллисекунда. Одно из таких мест — рынок ценных бумаг. Можно заработать состояние, воспользовавшись шансом арбитражной сделки за мгновение до конкурентов. Финанси- сты недавно вычислили, что было бы выгодно потратить 300 миллионов долларов на прокладку туннеля между Чикаго и Нью-Йорком, чтобы спрямить оптоволоконные кабели и ускорить таким образом обмен ин- формацией между городами на три миллисекунды. Разумно спросить, так ли уж полезно для общества подобное вложение денег, но стимулы для таких инноваций предельно ясны, и сложно удивляться тому, что люди на них реагируют.
-<br><br>Точное измерение повсеместно принимаемого времени лежит в основе вычислительных сетей и сетей связи. Однако, как было с кораблями, а затем с поездами, самое большое влияние атомные часы, наверное, ока- зали на путешествия.
-<br><br>Никому уже не надо находить курс по движению солнца. Благодаря GPS самые примитивные смартфоны определяют местоположение вла- дельца, улавливая сигналы сети спутников. Зная, где на небе должен быть каждый из них в данный момент времени, путем триангуляции сигналов можно определить, где вы находитесь. Эта технология произвела революцию повсюду — от мореплавания до авиации, от разведки местности до туризма. Но для правильной работы спутники должны быть согласованы во времени.
-<br><br>На спутниках GPS обычно установлено четверо атомных часов на основе цезия и рубидия. Гюйгенс и Гаррисон могли лишь мечтать о такой точности, но ее все еще не хватает: остается погрешность в пару метров, которая усиливается помехами при прохождении сигнала через ионосферу Земли. По этой же причине беспилотным автомобилям, кроме GPS, нужны сенсоры: пара метров на шоссе — это разница между ездой в своем ряду и лобовым столкновением.
-<br><br>Тем временем часы продолжают совершенствоваться. Ученые недавно разработали модель, основанную на элементе иттербии. Когда примерно через пять миллиардов лет Солнце умрет и поглотит нашу планету, они отклонятся не более чем на сотую долю секунды. Как дополнительная точность повлияет на экономику за этот период? Время покажет.`
-    const cameraStopPosition = new THREE.Vector3(3.67, 0.97, -1.38)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.56, -0.4, -0.36, 0.63)
+    const descriptionText = `${clockText}`
+    const cameraStopPosition = new THREE.Vector3(3.46, 0.97, -1.42)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.11, -0.69, -0.1, 0.7)
     const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
@@ -583,9 +605,6 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   orbitControls!.enableZoom = false
   orbitControls!.enablePan = false
 
-  orbitControls!.minPolarAngle = 0
-  orbitControls!.maxPolarAngle = Math.PI
-
   const updateControl = useControl(camera, orbitControls)
 
   const objectsMap: ObjectsMap = new Map()
@@ -595,10 +614,11 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createDartBoardModel(scene, objectsMap, actionsMap)
   createPedestalModel(scene, objectsMap)
   createCameraModel(scene, objectsMap, actionsMap)
-  createPocketWatchModel(scene, objectsMap, actionsMap)
+  createClockModel(scene, objectsMap, actionsMap)
   createCarpet(scene, objectsMap, actionsMap)
   createWoodFloor(scene)
   createWalls(scene)
+  createPlinths(scene)
   createCeiling(scene)
 
   createLight(scene)

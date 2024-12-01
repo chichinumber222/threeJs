@@ -36,7 +36,7 @@ module.exports = {
         use: 'file-loader',
       },
       {
-        test: /\.glsl$/,
+        test: /\.(glsl|txt)$/,
         exclude: /node_modules/,
         use: 'raw-loader',
       },
