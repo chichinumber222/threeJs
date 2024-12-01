@@ -107,11 +107,10 @@ const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitContro
   }
 }
 
-const getRepeatableTexture = (texture: THREE.Texture, repeatCount?: number) => {
-  const count = repeatCount ?? 5
+const getRepeatableTexture = (texture: THREE.Texture, repeatCountX: number = 5, repeatCountY: number = 5) => {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(count, count)
+  texture.repeat.set(repeatCountX, repeatCountY)
   return texture
 }
 
@@ -199,9 +198,9 @@ const createWoodFloor = (scene: THREE.Scene) => {
     new THREE.PlaneGeometry(10, 10),
     new THREE.MeshStandardMaterial({
       color: 0xcccccc,
-      map: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/color.jpg'), 10),
-      normalMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/normal.jpg'), 10),
-      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/rough.jpg'), 10),
+      map: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/color.jpg'), 10, 10),
+      normalMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/normal.jpg'), 10, 10),
+      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/rough.jpg'), 10, 10),
     })
   )
   mesh.rotation.x = - Math.PI * 0.5
@@ -285,14 +284,12 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
 }
 
 const createWalls = (scene: THREE.Scene) => {
-  const geometry = new THREE.PlaneGeometry(measure, measure / 3, 100, 100)
+  const geometry = new THREE.PlaneGeometry(measure, measure / 3)
   const material = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
-    map: getRepeatableTexture(textureLoader.load('static/textures/wall/color.jpg'), 3),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/wall/normal.jpg'), 3),
-    roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wall/rough.jpg'), 3),
-    displacementMap: getRepeatableTexture(textureLoader.load('static/textures/wall/disp.jpg'), 3),
-    displacementScale: 0.04,
+    map: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/color.jpg'), 5, 2),
+    normalMap: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/normal.jpg'), 5, 2),
+    roughness: 0.35,
   })
   const wallNorth = new THREE.Mesh(geometry, material)
   wallNorth.position.set(0, (measure / 6) - offset, -((measure / 2) - offset))
@@ -316,9 +313,9 @@ const createCeiling = (scene: THREE.Scene) => {
   const geometry = new THREE.PlaneGeometry(measure, measure)
   const material = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
-    map: getRepeatableTexture(textureLoader.load('static/textures/ceiling/color.jpg'), 4),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/normal.jpg'), 4),
-    roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/rough.jpg'), 4),
+    map: getRepeatableTexture(textureLoader.load('static/textures/ceiling/color.jpg'), 4, 4),
+    normalMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/normal.jpg'), 4, 4),
+    roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/rough.jpg'), 4, 4),
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.set(Math.PI / 2, 0, 0)
@@ -564,7 +561,7 @@ const createLight = (scene: THREE.Scene) => {
   pointLight.position.set(0, 2.5, 0)
   scene.add(pointLight)
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.3)
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
   directionalLight.position.set(1, 2.5, 1)
   directionalLight.shadow.camera.near = 0.1
   directionalLight.shadow.camera.far = 20
