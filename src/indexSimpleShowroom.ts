@@ -327,7 +327,7 @@ const createPlinths = (scene: THREE.Scene) => {
       vBoxHeight: {
         value: plinthHeight,
       }
-    } ,
+    },
   })
   const plinthNorth = new THREE.Mesh(geometry1, material)
   plinthNorth.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
@@ -575,27 +575,37 @@ const initActions = (
 }
 
 const createLight = (scene: THREE.Scene) => {
-  const ambientLight = new THREE.AmbientLight(0xffffff, 2)
-  scene.add(ambientLight)
+  gltfLoader.load('./static/gltf/lamp/lamp.glb', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(1.5, 0.7, 1.5)
+    model.position.set(0, 2.51, 0)
+    model.castShadow = true
+    scene.add(model)
 
-  const pointLight = new THREE.PointLight(0xffffff, 2.5)
-  pointLight.castShadow = true
-  pointLight.position.set(0, 2.5, 0)
-  scene.add(pointLight)
+    const pointLight = new THREE.PointLight(0xffffff, 0.3)
+    pointLight.castShadow = true
+    pointLight.position.set(0, 2.5, 0)
+    scene.add(pointLight)
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
-  directionalLight.position.set(1, 2.5, 1)
-  directionalLight.shadow.camera.near = 0.1
-  directionalLight.shadow.camera.far = 20
-  directionalLight.shadow.camera.right = 5
-  directionalLight.shadow.camera.left = -5
-  directionalLight.shadow.camera.top = 5
-  directionalLight.shadow.camera.bottom = -5
-  directionalLight.shadow.mapSize.width = 1024
-  directionalLight.shadow.mapSize.height = 1024
-  directionalLight.shadow.radius = 2
-  directionalLight.shadow.bias = -0.00005
-  scene.add(directionalLight)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2)
+    scene.add(ambientLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
+    directionalLight.position.set(1, 2.5, 1)
+    directionalLight.shadow.camera.near = 0.1
+    directionalLight.shadow.camera.far = 20
+    directionalLight.shadow.camera.right = 5
+    directionalLight.shadow.camera.left = -5
+    directionalLight.shadow.camera.top = 5
+    directionalLight.shadow.camera.bottom = -5
+    directionalLight.shadow.mapSize.width = 1024
+    directionalLight.shadow.mapSize.height = 1024
+    directionalLight.shadow.radius = 2
+    directionalLight.shadow.bias = -0.00005
+    scene.add(directionalLight)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
 }
 
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
