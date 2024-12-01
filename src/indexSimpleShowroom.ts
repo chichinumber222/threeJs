@@ -10,6 +10,7 @@ import { isMobile } from "./utils/is-mobile"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
 import clockText from './static/texts/clock.txt'
+import pictureText from './static/texts/clock.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -392,7 +393,7 @@ const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, action
     model.rotation.set(0, -Math.PI / 2, 0)
     model.castShadow = true
     scene.add(model)
-    const descriptionText = '<b>Dart board</b><br> ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit.'
+    const descriptionText = `${pictureText}`
     const cameraStopPosition = new THREE.Vector3(4.13, 2.06, -1.57)
     const cameraStopQuaternion = new THREE.Quaternion(-0.02, -0.78, -0.03, 0.62)
     const id = markObject(model)
