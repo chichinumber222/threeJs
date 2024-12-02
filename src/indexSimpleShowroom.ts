@@ -10,7 +10,9 @@ import { isMobile } from "./utils/is-mobile"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
 import clockText from './static/texts/clock.txt'
-import pictureText from './static/texts/clock.txt'
+import dartBoard from './static/texts/dartBoard.txt'
+import pictureText from './static/texts/pictureText.txt'
+import cameraText from './static/texts/cameraText.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -370,7 +372,7 @@ const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsM
     model.position.set(-2, 2, -4.85)
     model.castShadow = true
     scene.add(model)
-    const descriptionText = '<b>Picture</b><br> ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit. <br><br> Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. <br><br> Placeat ullam explicabo rem harum cumque?'
+    const descriptionText = `${pictureText}`
     const cameraStopPosition = new THREE.Vector3(-1.4, 1.92, -3.7)
     const cameraStopQuaternion = new THREE.Quaternion(0.04, 0, 0)
     const id = markObject(model)
@@ -393,7 +395,7 @@ const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, action
     model.rotation.set(0, -Math.PI / 2, 0)
     model.castShadow = true
     scene.add(model)
-    const descriptionText = `${pictureText}`
+    const descriptionText = `${dartBoard}`
     const cameraStopPosition = new THREE.Vector3(4.13, 2.06, -1.57)
     const cameraStopQuaternion = new THREE.Quaternion(-0.02, -0.78, -0.03, 0.62)
     const id = markObject(model)
@@ -431,7 +433,7 @@ const createCameraModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMa
     model.rotation.set(0, -Math.PI / 2, 0)
     model.castShadow = true
     scene.add(model)
-    const descriptionText = '<b>Camera</b><br>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti eius similique consequuntur numquam. Voluptatem ut tenetur explicabo. Impedit et, quia eveniet illum molestiae similique. Placeat ullam explicabo rem harum cumque? Lorem ipsum, dolor sit amet consectetur adipisicing elit.'
+    const descriptionText = `${cameraText}`
     const cameraStopPosition = new THREE.Vector3(3.54, 0.95, -0.83)
     const cameraStopQuaternion = new THREE.Quaternion(-0.13, -0.63, -0.11, 0.75)
     const id = markObject(model)
