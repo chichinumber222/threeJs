@@ -86,12 +86,12 @@ const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
-  start: new THREE.Vector3(2.5, 1.5, 4),
-  last: new THREE.Vector3(2.5, 1.5, 4),
+  start: new THREE.Vector3(-3.32, 1.47, 2.66),
+  last: new THREE.Vector3(-3.32, 1.47, 2.66),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(-0.07, 0.32, 0.03, 0.94),
-  last: new THREE.Quaternion(-0.07, 0.32, 0.03, 0.94),
+  start: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
+  last: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
 }
 
 const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
