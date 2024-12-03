@@ -6,7 +6,7 @@ import gsap from 'gsap'
 import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
-import { isMobile } from "./utils/is-mobile"
+import { mobileCheck } from "./utils/mobile-check"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
 import clockText from './static/texts/clock.txt'
@@ -73,6 +73,7 @@ const props: InitSceneProps = {
   canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
 }
 
+const isMobile = mobileCheck()
 const textureLoader = new THREE.TextureLoader()
 const gltfLoader = new GLTFLoader()
 const raycaster = new THREE.Raycaster()
@@ -85,8 +86,8 @@ const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
-  start: new THREE.Vector3(1, 1, 1),
-  last: new THREE.Vector3(1, 1, 1),
+  start: new THREE.Vector3(1, 1.5, 3),
+  last: new THREE.Vector3(1, 1.5, 3),
 }
 const quaternions: Quaternions = {
   start: new THREE.Quaternion(0, 0, 0),
@@ -374,7 +375,7 @@ const createCeiling = (scene: THREE.Scene) => {
 }
 
 const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
-  gltfLoader.load('./static/gltf/picture.gltf/fancy_picture_frame_01_2k.gltf', (gltf) => {
+  gltfLoader.load('./static/gltf/picture.gltf/picture.gltf', (gltf) => {
     const model = gltf.scene
     model.position.set(-2, 2, -4.85)
     model.scale.set(2.5, 2.5, 2.5)
@@ -412,7 +413,7 @@ const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: 
 }
 
 const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
-  gltfLoader.load('./static/gltf/dartboard.gltf/dartboard_1k.gltf', (gltf) => {
+  gltfLoader.load('./static/gltf/dartboard/dartboard.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(2, 2, 2)
     model.position.set(4.85, 2, -1)
@@ -557,6 +558,65 @@ const createClockModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Ac
   })
 }
 
+const createSofaModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/sofa_02_1k.gltf/sofa_02_1k.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(1.7, 1.7, 1.7)
+    model.rotation.set(0, Math.PI / 2, 0)
+    model.position.set(-3.95, 0, -1.7)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/ottoman/otoman.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(1.1, 1.1, 1.1)
+    model.position.set(-3.7, 0, -3.8)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
 const createNavigationMarker = (scene: THREE.Scene) => {
   const group = new THREE.Group()
   const baseGeometry = new THREE.CircleGeometry(0.3, 30)
@@ -623,7 +683,7 @@ const initActions = (
       prevActiveId = object.userData.id
     }
   }
-  if (!isMobile()) {
+  if (!isMobile) {
     window.addEventListener('mousemove', _.throttle(hover, 40))
   }
 
@@ -720,6 +780,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createWalls(scene)
   createPlinths(scene)
   createCeiling(scene)
+  createSofaModel(scene, boxesMap)
+  createOttomanModel(scene, boxesMap)
 
   createLight(scene)
 
@@ -730,14 +792,14 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
 
-    if (!isMobile()) {
-      // because hover should be not only mousemove handler
-      if (frameCounter > 20) {
+    // because hover should be not only mousemove handler
+    if (frameCounter > 20) {
+      if (!isMobile) {
         hover()
-        frameCounter = 0
       }
-      frameCounter++
+      frameCounter = 0
     }
+    frameCounter++
 
     updateControl()
     stats.update()

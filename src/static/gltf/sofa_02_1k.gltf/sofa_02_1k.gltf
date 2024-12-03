@@ -16,17 +16,27 @@
   "nodes": [
     {
       "mesh": 0,
-      "name": "fancy_picture_frame_01"
+      "name": "sofa_02_Base",
+      "translation": [
+        0.00026735191931948066,
+        0.00020578503608703613,
+        0.03126468509435654
+      ]
     },
     {
       "mesh": 1,
-      "name": "fancy_picture_frame_01_canvas"
+      "name": "sofa_02_Seat",
+      "translation": [
+        0.00026735191931948066,
+        0.00020578503608703613,
+        0.03126468509435654
+      ]
     }
   ],
   "materials": [
     {
       "doubleSided": true,
-      "name": "fancy_picture_frame_01",
+      "name": "sofa_02",
       "normalTexture": {
         "index": 0
       },
@@ -34,32 +44,15 @@
         "baseColorTexture": {
           "index": 1
         },
-        "metallicFactor": 0,
         "metallicRoughnessTexture": {
           "index": 2
-        }
-      }
-    },
-    {
-      "doubleSided": true,
-      "name": "fancy_picture_frame_01_canvas",
-      "normalTexture": {
-        "index": 3
-      },
-      "pbrMetallicRoughness": {
-        "baseColorTexture": {
-          "index": 4
-        },
-        "metallicFactor": 0,
-        "metallicRoughnessTexture": {
-          "index": 5
         }
       }
     }
   ],
   "meshes": [
     {
-      "name": "Plane.004",
+      "name": "Plane.001",
       "primitives": [
         {
           "attributes": {
@@ -73,7 +66,7 @@
       ]
     },
     {
-      "name": "Plane.005",
+      "name": "Mesh.007",
       "primitives": [
         {
           "attributes": {
@@ -82,7 +75,7 @@
             "TEXCOORD_0": 6
           },
           "indices": 7,
-          "material": 1
+          "material": 0
         }
       ]
     }
@@ -99,162 +92,135 @@
     {
       "sampler": 0,
       "source": 2
-    },
-    {
-      "sampler": 0,
-      "source": 3
-    },
-    {
-      "sampler": 0,
-      "source": 4
-    },
-    {
-      "sampler": 0,
-      "source": 5
     }
   ],
   "images": [
     {
       "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_nor_gl",
-      "uri": "textures/fancy_picture_frame_01_nor_gl_2k.jpg"
+      "name": "sofa_02_nor_gl",
+      "uri": "textures/sofa_02_nor_gl_1k.jpg"
     },
     {
       "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_diff",
-      "uri": "textures/fancy_picture_frame_01_diff_2k.jpg"
+      "name": "sofa_02_diff",
+      "uri": "textures/sofa_02_diff_1k.jpg"
     },
     {
       "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_rough",
-      "uri": "textures/fancy_picture_frame_01_rough_2k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_canvas_nor_gl",
-      "uri": "textures/fancy_picture_frame_01_canvas_nor_gl_2k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_canvas_diff",
-      "uri": "textures/fancy_picture_frame_01_canvas_diff_2k.jpg"
-    },
-    {
-      "mimeType": "image/jpeg",
-      "name": "fancy_picture_frame_01_canvas_rough",
-      "uri": "textures/fancy_picture_frame_01_canvas_rough_2k.jpg"
+      "name": "sofa_02_metallic-sofa_02_roughness",
+      "uri": "textures/sofa_02_arm_1k.jpg"
     }
   ],
   "accessors": [
     {
       "bufferView": 0,
       "componentType": 5126,
-      "count": 629,
+      "count": 1616,
       "max": [
-        0.301515132188797,
-        0.23206321895122528,
-        0.0218921210616827
+        0.9035836458206177,
+        0.7094888687133789,
+        0.3020688593387604
       ],
       "min": [
-        -0.301515132188797,
-        -0.23206323385238647,
-        0.001899046590551734
+        -0.9035837054252625,
+        -5.960464477539063e-8,
+        -0.5089631676673889
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 1,
       "componentType": 5126,
-      "count": 629,
+      "count": 1616,
       "type": "VEC3"
     },
     {
       "bufferView": 2,
       "componentType": 5126,
-      "count": 629,
+      "count": 1616,
       "type": "VEC2"
     },
     {
       "bufferView": 3,
       "componentType": 5123,
-      "count": 2808,
+      "count": 7032,
       "type": "SCALAR"
     },
     {
       "bufferView": 4,
       "componentType": 5126,
-      "count": 6,
+      "count": 212,
       "max": [
-        0.2693166136741638,
-        0.19914330542087555,
-        0.006578734610229731
+        0.7098315358161926,
+        0.41038596630096436,
+        0.3087882101535797
       ],
       "min": [
-        -0.27005767822265625,
-        -0.2011447250843048,
-        0.006578703876584768
+        -0.7062357068061829,
+        0.24655179679393768,
+        -0.2188045084476471
       ],
       "type": "VEC3"
     },
     {
       "bufferView": 5,
       "componentType": 5126,
-      "count": 6,
+      "count": 212,
       "type": "VEC3"
     },
     {
       "bufferView": 6,
       "componentType": 5126,
-      "count": 6,
+      "count": 212,
       "type": "VEC2"
     },
     {
       "bufferView": 7,
       "componentType": 5123,
-      "count": 6,
+      "count": 1152,
       "type": "SCALAR"
     }
   ],
   "bufferViews": [
     {
       "buffer": 0,
-      "byteLength": 7548,
+      "byteLength": 19392,
       "byteOffset": 0
     },
     {
       "buffer": 0,
-      "byteLength": 7548,
-      "byteOffset": 7548
+      "byteLength": 19392,
+      "byteOffset": 19392
     },
     {
       "buffer": 0,
-      "byteLength": 5032,
-      "byteOffset": 15096
+      "byteLength": 12928,
+      "byteOffset": 38784
     },
     {
       "buffer": 0,
-      "byteLength": 5616,
-      "byteOffset": 20128
+      "byteLength": 14064,
+      "byteOffset": 51712
     },
     {
       "buffer": 0,
-      "byteLength": 72,
-      "byteOffset": 25744
+      "byteLength": 2544,
+      "byteOffset": 65776
     },
     {
       "buffer": 0,
-      "byteLength": 72,
-      "byteOffset": 25816
+      "byteLength": 2544,
+      "byteOffset": 68320
     },
     {
       "buffer": 0,
-      "byteLength": 48,
-      "byteOffset": 25888
+      "byteLength": 1696,
+      "byteOffset": 70864
     },
     {
       "buffer": 0,
-      "byteLength": 12,
-      "byteOffset": 25936
+      "byteLength": 2304,
+      "byteOffset": 72560
     }
   ],
   "samplers": [
@@ -265,8 +231,8 @@
   ],
   "buffers": [
     {
-      "byteLength": 25948,
-      "uri": "fancy_picture_frame_01.bin"
+      "byteLength": 74864,
+      "uri": "sofa_02.bin"
     }
   ]
 }
