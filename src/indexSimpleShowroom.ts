@@ -86,12 +86,12 @@ const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
-  start: new THREE.Vector3(1, 1.5, 3),
-  last: new THREE.Vector3(1, 1.5, 3),
+  start: new THREE.Vector3(2.5, 1.5, 4),
+  last: new THREE.Vector3(2.5, 1.5, 4),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(0, 0, 0),
-  last: new THREE.Quaternion(0, 0, 0),
+  start: new THREE.Quaternion(-0.07, 0.32, 0.03, 0.94),
+  last: new THREE.Quaternion(-0.07, 0.32, 0.03, 0.94),
 }
 
 const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
@@ -562,8 +562,8 @@ const createSofaModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/sofa_02_1k.gltf/sofa_02_1k.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.7, 1.7, 1.7)
-    model.rotation.set(0, Math.PI / 2, 0)
-    model.position.set(-3.95, 0, -1.7)
+    model.rotation.set(0, Math.PI, 0)
+    model.position.set(0, 0, 2.5)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -592,7 +592,8 @@ const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/ottoman/otoman.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.1, 1.1, 1.1)
-    model.position.set(-3.7, 0, -3.8)
+    model.position.set(-1.3, 0, 1.2)
+    model.rotation.set(0, -Math.PI / 2, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -789,7 +790,6 @@ const createLight = (scene: THREE.Scene) => {
     const model = gltf.scene
     model.scale.set(1.5, 0.7, 1.5)
     model.position.set(0, 2.51, 0)
-    model.castShadow = true
     scene.add(model)
 
     const pointLight = new THREE.PointLight(0xffffff, 0.3)
@@ -802,6 +802,7 @@ const createLight = (scene: THREE.Scene) => {
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
     directionalLight.position.set(1, 2.5, 1)
+    directionalLight.castShadow = true
     directionalLight.shadow.camera.near = 0.1
     directionalLight.shadow.camera.far = 20
     directionalLight.shadow.camera.right = 5
