@@ -617,6 +617,36 @@ const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
+const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/office-chair/uploads_files_5045637_chair.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(1.7, 1.7, 1.7)
+    model.position.set(1.5, 0, -4)
+    model.rotation.set(0, Math.PI / 2, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
 const createNavigationMarker = (scene: THREE.Scene) => {
   const group = new THREE.Group()
   const baseGeometry = new THREE.CircleGeometry(0.3, 30)
@@ -782,6 +812,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createCeiling(scene)
   createSofaModel(scene, boxesMap)
   createOttomanModel(scene, boxesMap)
+  createOfficeChair(scene, boxesMap)
 
   createLight(scene)
 
