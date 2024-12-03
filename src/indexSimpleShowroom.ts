@@ -42,7 +42,7 @@ interface Actions {
 }
 
 type ActionsMap = Map<string, Actions>
-type ObjectsMap = Map<string, THREE.Object3D>
+type BoxesMap = Map<string, THREE.Object3D>
 
 interface Positions {
   start: THREE.Vector3,
@@ -91,12 +91,6 @@ const positions: Positions = {
 const quaternions: Quaternions = {
   start: new THREE.Quaternion(0, 0, 0),
   last: new THREE.Quaternion(0, 0, 0),
-}
-
-const markObject = (currentObject: THREE.Object3D) => {
-  const uniqId = THREE.MathUtils.generateUUID()
-  currentObject.traverse((child) => child.userData.id = uniqId)
-  return uniqId
 }
 
 const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
@@ -219,7 +213,7 @@ const createWoodFloor = (scene: THREE.Scene) => {
   scene.add(mesh)
 }
 
-const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
@@ -237,6 +231,8 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
   mesh.receiveShadow = true
   mesh.name = 'carpet'
   scene.add(mesh)
+  const id = THREE.MathUtils.generateUUID()
+  // set actions
   const rightClickAction = ({ point, orbitControls, enableEventHandlers, markers, camera }: ActionParams) => {
     const timeline = gsap.timeline({
       onStart: () => {
@@ -285,12 +281,24 @@ const createCarpet = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: Ac
     }
     floorMarker.visible = false
   }
-  const id = markObject(mesh)
   actionsMap.set(id, {
     rightClick: rightClickAction,
     hover: hoverAction,
   })
-  objectsMap.set(id, mesh)
+  // set box
+  const boundingBox = new THREE.Box3().setFromObject(mesh)
+  const boundingBoxSize = new THREE.Vector3()
+  boundingBox.getSize(boundingBoxSize)
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+    new THREE.MeshBasicMaterial({ visible: false })
+  )
+  const boundingBoxCenter = new THREE.Vector3()
+  boundingBox.getCenter(boundingBoxCenter)
+  box.position.copy(boundingBoxCenter)
+  box.traverse((child) => child.userData.id = id)
+  scene.add(box)
+  boxesMap.set(id, box)
 }
 
 const createWalls = (scene: THREE.Scene) => {
@@ -365,106 +373,185 @@ const createCeiling = (scene: THREE.Scene) => {
   scene.add(mesh)
 }
 
-const createPictureModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/picture.gltf/fancy_picture_frame_01_2k.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(2.5, 2.5, 2.5)
     model.position.set(-2, 2, -4.85)
-    model.castShadow = true
+    model.scale.set(2.5, 2.5, 2.5)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
     scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
     const descriptionText = `${pictureText}`
     const cameraStopPosition = new THREE.Vector3(-1.4, 1.92, -3.7)
     const cameraStopQuaternion = new THREE.Quaternion(0.04, 0, 0)
-    const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
       }
     })
-    objectsMap.set(id, model)
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error picture', error)
   })
 }
 
-const createDartBoardModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/dartboard.gltf/dartboard_1k.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(2, 2, 2)
     model.position.set(4.85, 2, -1)
     model.rotation.set(0, -Math.PI / 2, 0)
-    model.castShadow = true
+    model.traverse((child) => {
+      child.castShadow = true
+    })
     scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
     const descriptionText = `${dartBoard}`
     const cameraStopPosition = new THREE.Vector3(4.13, 2.06, -1.57)
     const cameraStopQuaternion = new THREE.Quaternion(-0.02, -0.78, -0.03, 0.62)
-    const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
       },
     })
-    objectsMap.set(id, model)
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
 }
 
-const createPedestalModel = (scene: THREE.Scene, objectsMap: ObjectsMap) => {
+const createPedestalModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/drawer.gltf/vintage_wooden_drawer_01_4k.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.5, 1.5, 1.5)
     model.rotation.set(0, -Math.PI / 2, 0)
     model.position.set(3.8, 0, -1)
-    model.castShadow = true
+    model.traverse((child) => {
+      child.castShadow = true
+    })
     scene.add(model)
-    const id = markObject(model)
-    objectsMap.set(id, model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
 }
 
-const createCameraModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+const createCameraModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/camera.gltf/Camera_01_1k.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.3, 1.3, 1.3)
     model.position.set(3.83, 0.81, -0.75)
     model.rotation.set(0, -Math.PI / 2, 0)
-    model.castShadow = true
+    model.traverse((child) => {
+      child.castShadow = true
+    })
     scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
     const descriptionText = `${cameraText}`
     const cameraStopPosition = new THREE.Vector3(3.54, 0.95, -0.83)
     const cameraStopQuaternion = new THREE.Quaternion(-0.13, -0.63, -0.11, 0.75)
-    const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
       },
     })
-    objectsMap.set(id, model)
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
 }
 
-const createClockModel = (scene: THREE.Scene, objectsMap: ObjectsMap, actionsMap: ActionsMap) => {
+const createClockModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/clock/mantel_clock_01_2k.gltf', (gltf) => {
     const model = gltf.scene
     model.position.set(3.75, 0.81, -1.3)
     model.rotation.set(0, -Math.PI / 2, 0)
-    model.castShadow = true
+    model.traverse((child) => {
+      child.castShadow = true
+    })
     scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
     const descriptionText = `${clockText}`
     const cameraStopPosition = new THREE.Vector3(3.46, 0.97, -1.42)
     const cameraStopQuaternion = new THREE.Quaternion(-0.11, -0.69, -0.1, 0.7)
-    const id = markObject(model)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
       },
     })
-    objectsMap.set(id, model)
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
@@ -502,7 +589,7 @@ const createNavigationMarker = (scene: THREE.Scene) => {
 const initActions = (
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
-  objectsMap: ObjectsMap,
+  boxesMap: BoxesMap,
   actionsMap: ActionsMap,
   orbitControls?: OrbitControls,
 ) => {
@@ -528,7 +615,7 @@ const initActions = (
       prevActiveId = null
     }
     raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    const intersected = raycaster.intersectObjects([...boxesMap.values()])
     if (intersected.length) {
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
@@ -546,7 +633,7 @@ const initActions = (
     }
     event?.preventDefault()
     raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    const intersected = raycaster.intersectObjects([...boxesMap.values()])
     if (intersected.length) {
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
@@ -563,7 +650,7 @@ const initActions = (
     }
     event?.preventDefault()
     raycaster.setFromCamera(mouse, camera)
-    const intersected = raycaster.intersectObjects([...objectsMap.values()])
+    const intersected = raycaster.intersectObjects([...boxesMap.values()])
     if (intersected.length) {
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
@@ -620,15 +707,15 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   const updateControl = useControl(camera, orbitControls)
 
-  const objectsMap: ObjectsMap = new Map()
+  const boxesMap: BoxesMap = new Map()
   const actionsMap: ActionsMap = new Map()
 
-  createPictureModel(scene, objectsMap, actionsMap)
-  createDartBoardModel(scene, objectsMap, actionsMap)
-  createPedestalModel(scene, objectsMap)
-  createCameraModel(scene, objectsMap, actionsMap)
-  createClockModel(scene, objectsMap, actionsMap)
-  createCarpet(scene, objectsMap, actionsMap)
+  createPictureModel(scene, boxesMap, actionsMap)
+  createDartBoardModel(scene, boxesMap, actionsMap)
+  createPedestalModel(scene, boxesMap)
+  createCameraModel(scene, boxesMap, actionsMap)
+  createClockModel(scene, boxesMap, actionsMap)
+  createCarpet(scene, boxesMap, actionsMap)
   createWoodFloor(scene)
   createWalls(scene)
   createPlinths(scene)
@@ -636,7 +723,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   createLight(scene)
 
-  const [hover] = initActions(scene, camera, objectsMap, actionsMap, orbitControls)
+  const [hover] = initActions(scene, camera, boxesMap, actionsMap, orbitControls)
 
   let frameCounter = 0
   function animate() {
