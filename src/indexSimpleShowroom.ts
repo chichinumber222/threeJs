@@ -12,7 +12,6 @@ import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
 import clockText from './static/texts/clock.txt'
 import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
-import cameraText from './static/texts/cameraText.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -460,80 +459,11 @@ const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap
   })
 }
 
-const createPedestalModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/drawer.gltf/vintage_wooden_drawer_01_4k.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.5, 1.5, 1.5)
-    model.rotation.set(0, -Math.PI / 2, 0)
-    model.position.set(3.8, 0, -1)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createCameraModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
-  gltfLoader.load('./static/gltf/camera.gltf/Camera_01_1k.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.3, 1.3, 1.3)
-    model.position.set(3.83, 0.81, -0.75)
-    model.rotation.set(0, -Math.PI / 2, 0)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set actions
-    const descriptionText = `${cameraText}`
-    const cameraStopPosition = new THREE.Vector3(3.54, 0.95, -0.83)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.13, -0.63, -0.11, 0.75)
-    actionsMap.set(id, {
-      leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
-      },
-    })
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
 const createClockModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/clock/mantel_clock_01_2k.gltf', (gltf) => {
     const model = gltf.scene
-    model.position.set(3.75, 0.81, -1.3)
-    model.rotation.set(0, -Math.PI / 2, 0)
+    model.scale.set(1.5, 1.5, 1.5)
+    model.position.set(1, 1.092, -1.5)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -541,8 +471,8 @@ const createClockModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Ac
     const id = THREE.MathUtils.generateUUID()
     // set actions
     const descriptionText = `${clockText}`
-    const cameraStopPosition = new THREE.Vector3(3.46, 0.97, -1.42)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.11, -0.69, -0.1, 0.7)
+    const cameraStopPosition = new THREE.Vector3(0.97, 1.3, -1.1)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.08, 0.15, 0.01, 0.99)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
@@ -845,8 +775,6 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   createPictureModel(scene, boxesMap, actionsMap)
   createDartBoardModel(scene, boxesMap, actionsMap)
-  createPedestalModel(scene, boxesMap)
-  createCameraModel(scene, boxesMap, actionsMap)
   createClockModel(scene, boxesMap, actionsMap)
   createCarpet(scene, boxesMap, actionsMap)
   createWoodFloor(scene)
@@ -861,8 +789,6 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createLight(scene)
 
   if (isFlyMode()) {
-    
-
     let frameCounter = 0
     function animate() {
       requestAnimationFrame(animate)
