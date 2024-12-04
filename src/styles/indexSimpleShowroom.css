@@ -98,3 +98,15 @@ body {
 .no_visible {
     display: none;
 }
+
+#change_mode {
+    position: fixed;
+    left: 1%;
+    bottom: 1%;
+    cursor: pointer;
+    border: 1px solid #3498db;
+    background-color: transparent;
+    color: #3498db;
+    font-size: 1.5em;
+    box-shadow: 0 6px 6px rgba(0, 0, 0, 0.6);
+}

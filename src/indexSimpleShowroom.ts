@@ -94,6 +94,15 @@ const quaternions: Quaternions = {
   last: new THREE.Quaternion(0, 0, 0),
 }
 
+const lsModeKey = 'fly'
+const isFlyMode = () => {
+  return Boolean(localStorage.getItem(lsModeKey))
+}
+const changeMode = () => {
+  localStorage.setItem(lsModeKey, !isFlyMode() ? '1' : '')
+}
+document.getElementById('change_mode')?.addEventListener('click', changeMode)
+
 const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
   const direction = new THREE.Vector3()
   return () => {
@@ -791,9 +800,12 @@ const createLight = (scene: THREE.Scene) => {
 initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
-  orbitControls!.rotateSpeed = -0.5
-  orbitControls!.enableZoom = false
-  orbitControls!.enablePan = false
+
+  if (!isFlyMode()) {
+    orbitControls!.rotateSpeed = -0.5
+    orbitControls!.enableZoom = false
+    orbitControls!.enablePan = false
+  }
 
   const updateControl = useControl(camera, orbitControls)
 
@@ -816,24 +828,45 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
   createLight(scene)
 
-  const [hover] = initActions(scene, camera, boxesMap, actionsMap, orbitControls)
+  if (isFlyMode()) {
+    
 
-  let frameCounter = 0
-  function animate() {
-    requestAnimationFrame(animate)
-    renderer.render(scene, camera)
+    let frameCounter = 0
+    function animate() {
+      requestAnimationFrame(animate)
+      renderer.render(scene, camera)
 
-    // because hover should be not only mousemove handler
-    if (frameCounter > 20) {
-      if (!isMobile) {
-        hover()
+      if (frameCounter > 20) {
+        console.log('position', camera.position)
+        console.log('quaternion', camera.quaternion)
+        frameCounter = 0
       }
-      frameCounter = 0
+      frameCounter++
+  
+      orbitControls?.update()
+      stats.update()
     }
-    frameCounter++
+    animate()
+  } else {
+    const [hover] = initActions(scene, camera, boxesMap, actionsMap, orbitControls)
 
-    updateControl()
-    stats.update()
+    let frameCounter = 0
+    function animate() {
+      requestAnimationFrame(animate)
+      renderer.render(scene, camera)
+  
+      // because hover should be not only mousemove handler
+      if (frameCounter > 20) {
+        if (!isMobile) {
+          hover()
+        }
+        frameCounter = 0
+      }
+      frameCounter++
+  
+      updateControl()
+      stats.update()
+    }
+    animate()
   }
-  animate()
 })
