@@ -86,12 +86,12 @@ const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
-  start: new THREE.Vector3(1, 1.5, 3),
-  last: new THREE.Vector3(1, 1.5, 3),
+  start: new THREE.Vector3(-3.32, 1.47, 2.66),
+  last: new THREE.Vector3(-3.32, 1.47, 2.66),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(0, 0, 0),
-  last: new THREE.Quaternion(0, 0, 0),
+  start: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
+  last: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
 }
 
 const lsModeKey = 'fly'
@@ -571,8 +571,8 @@ const createSofaModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/sofa_02_1k.gltf/sofa_02_1k.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.7, 1.7, 1.7)
-    model.rotation.set(0, Math.PI / 2, 0)
-    model.position.set(-3.95, 0, -1.7)
+    model.rotation.set(0, Math.PI, 0)
+    model.position.set(0, 0, 2.5)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -601,7 +601,8 @@ const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/ottoman/otoman.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.1, 1.1, 1.1)
-    model.position.set(-3.7, 0, -3.8)
+    model.position.set(-1.3, 0, 1.2)
+    model.rotation.set(0, -Math.PI / 2, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -630,8 +631,38 @@ const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/office-chair/uploads_files_5045637_chair.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.7, 1.7, 1.7)
-    model.position.set(1.5, 0, -4)
+    model.position.set(1.9, 0, -4)
     model.rotation.set(0, Math.PI / 2, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/desk/uploads_files_3139729_DESK.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.6, 0.6, 0.6)
+    model.position.set(0, 0, -2)
+    model.rotation.set(0, Math.PI, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -768,7 +799,6 @@ const createLight = (scene: THREE.Scene) => {
     const model = gltf.scene
     model.scale.set(1.5, 0.7, 1.5)
     model.position.set(0, 2.51, 0)
-    model.castShadow = true
     scene.add(model)
 
     const pointLight = new THREE.PointLight(0xffffff, 0.3)
@@ -781,6 +811,7 @@ const createLight = (scene: THREE.Scene) => {
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
     directionalLight.position.set(1, 2.5, 1)
+    directionalLight.castShadow = true
     directionalLight.shadow.camera.near = 0.1
     directionalLight.shadow.camera.far = 20
     directionalLight.shadow.camera.right = 5
@@ -825,6 +856,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createSofaModel(scene, boxesMap)
   createOttomanModel(scene, boxesMap)
   createOfficeChair(scene, boxesMap)
+  createDesk(scene, boxesMap)
 
   createLight(scene)
 
