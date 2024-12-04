@@ -79,18 +79,19 @@ const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
 const floorWidth = 10
 const floorLength = 10
-const wallHeight = 3.33
+const wallHeight = 3.8
 const plinthHeight = 0.1
 const plinthDepth = 0.03
 const offset = 0.1
-const floorOffset = 0.9
+const floorOffsetX = 0.7
+const floorOffsetY = 0.1
 const positions: Positions = {
-  start: new THREE.Vector3(-3.32, 1.47, 2.66),
-  last: new THREE.Vector3(-3.32, 1.47, 2.66),
+  start: new THREE.Vector3(1.79, 1.92, 0.48),
+  last: new THREE.Vector3(1.79, 1.92, 0.48),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
-  last: new THREE.Quaternion(-0.125, -0.35, -0.047, 0.93),
+  start: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
+  last: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
 }
 
 const lsModeKey = 'fly'
@@ -219,12 +220,13 @@ const createWoodFloor = (scene: THREE.Scene) => {
   mesh.rotation.x = - Math.PI * 0.5
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.name = 'wood-floor'
+  mesh.receiveShadow = true
   scene.add(mesh)
 }
 
 const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
+    new THREE.PlaneGeometry(floorWidth - 2 * floorOffsetX, floorLength - 2 * floorOffsetX),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
       map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg')),
@@ -561,10 +563,41 @@ const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/office-chair/uploads_files_5045637_chair.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.7, 1.7, 1.7)
-    model.position.set(1.9, 0, -4)
-    model.rotation.set(0, Math.PI / 2, 0)
+    model.position.set(2, 0, -3.3)
+    model.rotation.set(0, Math.PI / 4, 0)
     model.traverse((child) => {
       child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(Math.max(boundingBoxSize.x, boundingBoxSize.z) / 2, boundingBoxSize.y, 20, 20),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    cone.position.copy(boundingBoxCenter)
+    cone.traverse((child) => child.userData.id = id)
+    scene.add(cone)
+    boxesMap.set(id, cone)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/desk/uploads_files_3139729_DESK.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.6, 0.6, 0.6)
+    model.position.set(0, 0, -2)
+    model.rotation.set(0, Math.PI, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+      child.receiveShadow = true
     })
     scene.add(model)
     const id = THREE.MathUtils.generateUUID()
@@ -587,12 +620,12 @@ const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/desk/uploads_files_3139729_DESK.gltf', (gltf) => {
+const createPlant1 = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/plant1/plant1.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(0.6, 0.6, 0.6)
-    model.position.set(0, 0, -2)
-    model.rotation.set(0, Math.PI, 0)
+    model.scale.set(2, 2, 2)
+    model.position.set(4, 0.47, -4)
+    model.rotation.set(0, Math.PI / 6, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -602,16 +635,54 @@ const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
     const boundingBox = new THREE.Box3().setFromObject(model)
     const boundingBoxSize = new THREE.Vector3()
     boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(Math.max(boundingBoxSize.x, boundingBoxSize.z) / 2, boundingBoxSize.y, 20, 20),
       new THREE.MeshBasicMaterial({ visible: false })
     )
     const boundingBoxCenter = new THREE.Vector3()
     boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
+    cone.position.copy(boundingBoxCenter)
+    cone.traverse((child) => child.userData.id = id)
+    scene.add(cone)
+    boxesMap.set(id, cone)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createCloset = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  gltfLoader.load('./static/gltf/closet/uploads_files_4016476_cupbo222ard2.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.25, 0.25, 0.25)
+    model.position.set(-4.25, 1.75, -1.8)
+    model.rotation.set(0, Math.PI / 2, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box1 = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y - floorOffsetY, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const box2 = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x + 2 * floorOffsetX, floorOffsetY, boundingBoxSize.z + 2 * floorOffsetX),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    box1.position.set(0, floorOffsetY / 2, 0)
+    box2.position.set(0, -(boundingBoxSize.y - floorOffsetY) / 2, 0)
+    const boxesGroup = new THREE.Group()
+    boxesGroup.add(box1, box2)
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    boxesGroup.position.set(boundingBoxCenter.x, boundingBoxCenter.y, boundingBoxCenter.z)
+    boxesGroup.traverse((child) => child.userData.id = id)
+    scene.add(boxesGroup)
+    boxesMap.set(id, boxesGroup)
   }, undefined, function (error) {
     console.error('error model', error)
   })
@@ -740,7 +811,7 @@ const createLight = (scene: THREE.Scene) => {
     scene.add(ambientLight)
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
-    directionalLight.position.set(1, 2.5, 1)
+    directionalLight.position.set(0, 3, 0)
     directionalLight.castShadow = true
     directionalLight.shadow.camera.near = 0.1
     directionalLight.shadow.camera.far = 20
@@ -785,6 +856,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createOttomanModel(scene, boxesMap)
   createOfficeChair(scene, boxesMap)
   createDesk(scene, boxesMap)
+  createPlant1(scene, boxesMap)
+  createCloset(scene, boxesMap)
 
   createLight(scene)
 
@@ -800,7 +873,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
         frameCounter = 0
       }
       frameCounter++
-  
+
       orbitControls?.update()
       stats.update()
     }
@@ -812,7 +885,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     function animate() {
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
-  
+
       // because hover should be not only mousemove handler
       if (frameCounter > 20) {
         if (!isMobile) {
@@ -821,7 +894,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
         frameCounter = 0
       }
       frameCounter++
-  
+
       updateControl()
       stats.update()
     }
