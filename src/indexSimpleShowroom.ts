@@ -3,7 +3,6 @@ import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from "./utils/stats"
 import { onChangeCursor } from "./utils/update-coord"
 import gsap from 'gsap'
-import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
 import { mobileCheck } from "./utils/mobile-check"
@@ -16,7 +15,7 @@ import pictureText from './static/texts/pictureText.txt'
 interface ActionParams {
   camera: THREE.PerspectiveCamera
   point: THREE.Vector3
-  orbitControls?: OrbitControls
+  enableControl?: (value: boolean) => void
   markers?: (THREE.Mesh | THREE.Group)[]
   enableEventHandlers: (value: boolean) => void
 }
@@ -67,9 +66,19 @@ interface DescriptionOptionsLeftRight {
 
 type DescriptionOptions = DescriptionOptionsTopBottom | DescriptionOptionsLeftRight
 
+const lsModeKey = 'fly'
+const isFlyMode = () => {
+  return Boolean(localStorage.getItem(lsModeKey))
+}
+const changeMode = () => {
+  localStorage.setItem(lsModeKey, !isFlyMode() ? '1' : '')
+}
+document.getElementById('change_mode')?.addEventListener('click', changeMode)
+
 const props: InitSceneProps = {
   disableDefaultLights: true,
   canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
+  disableDefaultControls: isFlyMode() ? false : true,
 }
 
 const isMobile = mobileCheck()
@@ -83,42 +92,73 @@ const wallHeight = 3.8
 const plinthHeight = 0.1
 const plinthDepth = 0.03
 const offset = 0.1
-const floorOffsetX = 0.7
-const floorOffsetY = 0.1
+const floorOffset = 0.9
 const positions: Positions = {
   start: new THREE.Vector3(1.79, 1.92, 0.48),
   last: new THREE.Vector3(1.79, 1.92, 0.48),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
-  last: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
+  start: new THREE.Quaternion(0, 0, 0, 0),
+  last: new THREE.Quaternion(0, 0, 0, 0),
 }
 
-const lsModeKey = 'fly'
-const isFlyMode = () => {
-  return Boolean(localStorage.getItem(lsModeKey))
-}
-const changeMode = () => {
-  localStorage.setItem(lsModeKey, !isFlyMode() ? '1' : '')
-}
-document.getElementById('change_mode')?.addEventListener('click', changeMode)
+const useControl = (camera: THREE.PerspectiveCamera, conatainer: HTMLElement) => {
+  camera.rotation.order = 'YXZ'
+  let isEnable = true
 
-const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
-  const direction = new THREE.Vector3()
-  return () => {
-    camera.getWorldDirection(direction)
-    return direction
+  let isMouseDown = false
+  const prevMousePos = { x: 0, y: 0 }
+  let deltaX = 0
+  let deltaY = 0
+  const dampingFactorDefault = 0.95
+  let dampingFactorCurrent = dampingFactorDefault
+  let frameCount = 0
+
+  conatainer.addEventListener('mousedown', (event) => {
+    if (!isEnable) return
+    if (!(event.button == 0)) return
+    isMouseDown = true
+    prevMousePos.x = event.clientX
+    prevMousePos.y = event.clientY
+
+  })
+  conatainer.addEventListener('mouseup', () => {
+    if (!isEnable) return
+    isMouseDown = false
+  })
+  conatainer.addEventListener('mouseleave', () => {
+    if (!isEnable) return
+    isMouseDown = false
+  })
+  conatainer.addEventListener('mousemove', (event) => {
+    if (!isEnable) return
+    if (isMouseDown) {
+      deltaX = event.clientX - prevMousePos.x
+      deltaY = event.clientY - prevMousePos.y
+      dampingFactorCurrent = dampingFactorDefault
+      prevMousePos.x = event.clientX
+      prevMousePos.y = event.clientY
+    }
+  })
+
+  const update = () => {
+    if (frameCount > 1) {
+      dampingFactorCurrent *= dampingFactorCurrent
+      frameCount = 0
+    }
+    frameCount++
+    const rotationDistanceY = deltaX * dampingFactorCurrent * 0.003
+    const rotationDistanceX = deltaY * dampingFactorCurrent * 0.003
+    camera.rotation.y += rotationDistanceY
+    camera.rotation.x += rotationDistanceX
+    camera.rotation.z = 0
   }
-}
 
-const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitControls) => {
-  const getCameraDirection = useCameraDirection(camera)
-  const cameraEyes = new THREE.Vector3()
-  return () => {
-    cameraEyes.copy(camera.position).add(getCameraDirection().multiplyScalar(0.5))
-    orbitControls?.target.copy(cameraEyes)
-    orbitControls?.update()
+  const enable = (value: boolean) => {
+    isEnable = value
   }
+
+  return [update, enable] as const
 }
 
 const getRepeatableTexture = (texture: THREE.Texture, repeatCountX: number = 5, repeatCountY: number = 5) => {
@@ -134,11 +174,11 @@ const descriptionModeAnimation = (
   stopQuaternion: THREE.Quaternion,
   descriptionOptions: DescriptionOptions,
 ) => {
-  const { enableEventHandlers, orbitControls, camera } = actionParams
+  const { enableEventHandlers, enableControl, camera } = actionParams
   positions.last?.copy(camera.position)
   quaternions.last?.copy(camera.quaternion)
   enableEventHandlers(false)
-  if (orbitControls) orbitControls.enabled = false
+  enableControl?.(false)
   const timeline = gsap.timeline({
     onComplete: () => {
       let textElement: HTMLElement | null = null
@@ -175,7 +215,7 @@ const descriptionModeAnimation = (
         camera.position.copy(positions.last || positions.start)
         camera.quaternion.copy(quaternions.last || quaternions.start)
         enableEventHandlers(true)
-        if (orbitControls) orbitControls.enabled = true
+        enableControl?.(true)
         textElement.classList.add('no_visible')
         exitButtonElement.classList.add('no_visible')
         textElement.innerHTML = ``
@@ -192,7 +232,7 @@ const descriptionModeAnimation = (
   timeline.to({ t: 0 }, {
     duration: 1.5,
     t: 1,
-    ease: "none",
+    ease: "power2.inOut",
     onUpdate: function () {
       const t = this.targets()[0].t
       camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
@@ -200,7 +240,7 @@ const descriptionModeAnimation = (
   }, "start")
   timeline.to(camera.position, {
     duration: 1.5,
-    ease: "none",
+    ease: "power2.inOut",
     x: stopPosition.x,
     z: stopPosition.z,
     y: stopPosition.y,
@@ -226,7 +266,7 @@ const createWoodFloor = (scene: THREE.Scene) => {
 
 const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorWidth - 2 * floorOffsetX, floorLength - 2 * floorOffsetX),
+    new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
       map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg')),
@@ -244,14 +284,14 @@ const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Action
   scene.add(mesh)
   const id = THREE.MathUtils.generateUUID()
   // set actions
-  const rightClickAction = ({ point, orbitControls, enableEventHandlers, markers, camera }: ActionParams) => {
+  const rightClickAction = ({ point, enableControl, enableEventHandlers, markers, camera }: ActionParams) => {
     const timeline = gsap.timeline({
       onStart: () => {
-        if (orbitControls) orbitControls.enabled = false
+        enableControl?.(false)
         enableEventHandlers(false)
       },
       onComplete: () => {
-        if (orbitControls) orbitControls!.enabled = true
+        enableControl?.(true)
         enableEventHandlers(true)
       },
     })
@@ -665,24 +705,16 @@ const createCloset = (scene: THREE.Scene, boxesMap: BoxesMap) => {
     const boundingBox = new THREE.Box3().setFromObject(model)
     const boundingBoxSize = new THREE.Vector3()
     boundingBox.getSize(boundingBoxSize)
-    const box1 = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y - floorOffsetY, boundingBoxSize.z),
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
       new THREE.MeshBasicMaterial({ visible: false })
     )
-    const box2 = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x + 2 * floorOffsetX, floorOffsetY, boundingBoxSize.z + 2 * floorOffsetX),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    box1.position.set(0, floorOffsetY / 2, 0)
-    box2.position.set(0, -(boundingBoxSize.y - floorOffsetY) / 2, 0)
-    const boxesGroup = new THREE.Group()
-    boxesGroup.add(box1, box2)
     const boundingBoxCenter = new THREE.Vector3()
     boundingBox.getCenter(boundingBoxCenter)
-    boxesGroup.position.set(boundingBoxCenter.x, boundingBoxCenter.y, boundingBoxCenter.z)
-    boxesGroup.traverse((child) => child.userData.id = id)
-    scene.add(boxesGroup)
-    boxesMap.set(id, boxesGroup)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
@@ -720,9 +752,10 @@ const createNavigationMarker = (scene: THREE.Scene) => {
 const initActions = (
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
+  container: HTMLElement,
   boxesMap: BoxesMap,
   actionsMap: ActionsMap,
-  orbitControls?: OrbitControls,
+  enableControl?: (value: boolean) => void
 ) => {
   let isActiveHover = true
   let isActiveRightClick = true
@@ -755,7 +788,7 @@ const initActions = (
     }
   }
   if (!isMobile) {
-    window.addEventListener('mousemove', _.throttle(hover, 40))
+    container.addEventListener('mousemove', _.throttle(hover, 40))
   }
 
   const rightClick = (event?: MouseEvent) => {
@@ -769,11 +802,11 @@ const initActions = (
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
       actions?.rightClick?.({
-        camera, point, orbitControls, markers, enableEventHandlers
+        camera, point, enableControl, markers, enableEventHandlers
       })
     }
   }
-  window.addEventListener('contextmenu', rightClick)
+  container.addEventListener('contextmenu', rightClick)
 
   const leftClick = (event?: MouseEvent) => {
     if (!isActiveLeftClick) {
@@ -786,11 +819,11 @@ const initActions = (
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
       actions?.leftClick?.({
-        camera, point, orbitControls, markers, enableEventHandlers
+        camera, point, enableControl, markers, enableEventHandlers
       })
     }
   }
-  window.addEventListener('click', leftClick)
+  container.addEventListener('click', leftClick)
 
   return [hover, leftClick, rightClick]
 }
@@ -833,14 +866,6 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
 
-  if (!isFlyMode()) {
-    orbitControls!.rotateSpeed = -0.5
-    orbitControls!.enableZoom = false
-    orbitControls!.enablePan = false
-  }
-
-  const updateControl = useControl(camera, orbitControls)
-
   const boxesMap: BoxesMap = new Map()
   const actionsMap: ActionsMap = new Map()
 
@@ -879,10 +904,13 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
     }
     animate()
   } else {
-    const [hover] = initActions(scene, camera, boxesMap, actionsMap, orbitControls)
+    const [updateControl, enableControl] = useControl(camera, renderer.domElement)
+
+    const [hover] = initActions(scene, camera, renderer.domElement, boxesMap, actionsMap, enableControl)
 
     let frameCounter = 0
     function animate() {
+
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
 
