@@ -120,7 +120,6 @@ const useControl = (camera: THREE.PerspectiveCamera, conatainer: HTMLElement) =>
     isMouseDown = true
     prevMousePos.x = event.clientX
     prevMousePos.y = event.clientY
-
   })
   conatainer.addEventListener('mouseup', () => {
     if (!isEnable) return
