@@ -8,9 +8,12 @@ import _ from 'lodash'
 import { mobileCheck } from "./utils/mobile-check"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
+import cashVertexShader from './shaders/showroom/cash/vertex.glsl'
+import cashFragmentShader from './shaders/showroom/cash/fragment.glsl'
 import clockText from './static/texts/clock.txt'
 import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
+import cashText from './static/texts/cash.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -231,7 +234,7 @@ const descriptionModeAnimation = (
   timeline.to({ t: 0 }, {
     duration: 1.5,
     t: 1,
-    ease: "power2.inOut",
+    ease: "none",
     onUpdate: function () {
       const t = this.targets()[0].t
       camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
@@ -239,7 +242,7 @@ const descriptionModeAnimation = (
   }, "start")
   timeline.to(camera.position, {
     duration: 1.5,
-    ease: "power2.inOut",
+    ease: "none",
     x: stopPosition.x,
     z: stopPosition.z,
     y: stopPosition.y,
@@ -598,7 +601,7 @@ const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+const createOfficeChairModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/office-chair/uploads_files_5045637_chair.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(1.7, 1.7, 1.7)
@@ -628,7 +631,7 @@ const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+const createDeskModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/desk/uploads_files_3139729_DESK.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(0.6, 0.6, 0.6)
@@ -659,7 +662,7 @@ const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createPlant1 = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+const createPlant1Model = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/plant1/plant1.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(2, 2, 2)
@@ -689,7 +692,7 @@ const createPlant1 = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createCloset = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+const createClosetModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/closet/uploads_files_4016476_cupbo222ard2.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(0.25, 0.25, 0.25)
@@ -717,6 +720,52 @@ const createCloset = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   }, undefined, function (error) {
     console.error('error model', error)
   })
+}
+
+const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  const fluctuationsDepth = 0.01
+  const fluctuationsFrequency = 50
+  const geometry = new THREE.PlaneGeometry(0.15, 0.05, 15, 15)
+  const material = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    vertexShader: cashVertexShader,
+    fragmentShader: cashFragmentShader,
+    uniforms: {
+      uTextureFront: { value: textureLoader.load('./static/textures/cash/front.jpg') },
+      uTextureBack: { value: textureLoader.load('./static/textures/cash/back.jpg') },
+      uDepth: { value: fluctuationsDepth },
+      uFrequency: { value: fluctuationsFrequency },
+    }
+  },
+  )
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.position.set(1.5, 1.105, -2)
+  mesh.rotation.set(Math.PI / 2, 0, Math.PI / 3)
+  scene.add(mesh)
+  const id = THREE.MathUtils.generateUUID()
+  // set actions
+  const descriptionText = `${cashText}`
+  const cameraStopPosition = new THREE.Vector3(1.61, 1.25, -1.94)
+  const cameraStopQuaternion = new THREE.Quaternion(-0.26, 0.73, 0.53, 0.36)
+  actionsMap.set(id, {
+    leftClick: (params: ActionParams) => {
+      descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+    },
+  })
+  // set box
+  const boundingBox = new THREE.Box3().setFromObject(mesh)
+  const boundingBoxSize = new THREE.Vector3()
+  boundingBox.getSize(boundingBoxSize)
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(boundingBoxSize.x, fluctuationsDepth * 2, boundingBoxSize.z),
+    new THREE.MeshBasicMaterial({ visible: false })
+  )
+  const boundingBoxCenter = new THREE.Vector3()
+  boundingBox.getCenter(boundingBoxCenter)
+  box.position.copy(boundingBoxCenter)
+  box.traverse((child) => child.userData.id = id)
+  scene.add(box)
+  boxesMap.set(id, box)
 }
 
 const createNavigationMarker = (scene: THREE.Scene) => {
@@ -878,14 +927,18 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createCeiling(scene)
   createSofaModel(scene, boxesMap)
   createOttomanModel(scene, boxesMap)
-  createOfficeChair(scene, boxesMap)
-  createDesk(scene, boxesMap)
-  createPlant1(scene, boxesMap)
-  createCloset(scene, boxesMap)
+  createOfficeChairModel(scene, boxesMap)
+  createDeskModel(scene, boxesMap)
+  createPlant1Model(scene, boxesMap)
+  createClosetModel(scene, boxesMap)
+  createCash(scene, boxesMap, actionsMap)
 
   createLight(scene)
 
   if (isFlyMode()) {
+    orbitControls!.minPolarAngle = -Math.PI
+    orbitControls!.maxPolarAngle = Math.PI
+
     let frameCounter = 0
     function animate() {
       requestAnimationFrame(animate)
