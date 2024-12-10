@@ -14,6 +14,7 @@ import clockText from './static/texts/clock.txt'
 import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
 import cashText from './static/texts/cash.txt'
+import bulbText from './static/texts/bulb.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -97,12 +98,12 @@ const plinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.9
 const positions: Positions = {
-  start: new THREE.Vector3(1.79, 1.92, 0.48),
-  last: new THREE.Vector3(1.79, 1.92, 0.48),
+  start: new THREE.Vector3(2.80, 1.79, 2.63),
+  last: new THREE.Vector3(2.80, 1.79, 2.63),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(0, 0, 0, 0),
-  last: new THREE.Quaternion(0, 0, 0, 0),
+  start: new THREE.Quaternion(-0.18, 0.29, 0.06, 0.94),
+  last: new THREE.Quaternion(-0.18, 0.29, 0.06, 0.94),
 }
 
 const useControl = (camera: THREE.PerspectiveCamera, conatainer: HTMLElement) => {
@@ -693,32 +694,36 @@ const createPlant1Model = (scene: THREE.Scene, boxesMap: BoxesMap) => {
 }
 
 const createClosetModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  const scale = new THREE.Vector3(0.25, 0.25, 0.25)
+  const position = new THREE.Vector3(-4.25, 1.75, -1.8)
+  const rotation = new THREE.Euler(0, Math.PI / 2, 0)
+
   gltfLoader.load('./static/gltf/closet/uploads_files_4016476_cupbo222ard2.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(0.25, 0.25, 0.25)
-    model.position.set(-4.25, 1.75, -1.8)
-    model.rotation.set(0, Math.PI / 2, 0)
+    model.scale.copy(scale)
+    model.position.copy(position)
+    model.rotation.copy(rotation)
     model.traverse((child) => {
       child.castShadow = true
     })
     scene.add(model)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+
+  gltfLoader.load('./static/gltf/closet_simple/closet_simple.gltf', (gltf) => {
     const id = THREE.MathUtils.generateUUID()
     // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
+    const box = gltf.scene
+    box.scale.copy(scale)
+    box.position.copy(position)
+    box.rotation.copy(rotation)
+    box.visible = false
     box.traverse((child) => child.userData.id = id)
     scene.add(box)
     boxesMap.set(id, box)
   }, undefined, function (error) {
-    console.error('error model', error)
+    console.error('error box', error)
   })
 }
 
@@ -766,6 +771,50 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
   box.traverse((child) => child.userData.id = id)
   scene.add(box)
   boxesMap.set(id, box)
+}
+
+const createBulbModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  const position = new THREE.Vector3(-3.9, 1.638, 1.2)
+  const rotation = new THREE.Euler(0, 0, 0)
+  const scale = new THREE.Vector3(2.5, 2.5, 2.5)
+
+  gltfLoader.load('./static/gltf/bulb/bulb.gltf', (gltf) => {
+    const model = gltf.scene
+    model.position.copy(position)
+    model.rotation.copy(rotation)
+    model.scale.copy(scale)
+    model.traverse(child => {
+      child.castShadow = true
+      if (child instanceof THREE.Mesh && /glass/.test(child.material.name)) {
+        child.material.opacity = 0.6
+      }
+    })
+    scene.add(model)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+
+  gltfLoader.load('./static/gltf/bulb_simple/bulb_simple.gltf', (gltf) => {
+    const id = THREE.MathUtils.generateUUID()
+    // set box
+    const box = gltf.scene
+    box.position.copy(position)
+    box.rotation.copy(rotation)
+    box.scale.copy(scale)
+    box.visible = false
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+    // set actions
+    const descriptionText = `${bulbText}`
+    const cameraStopPosition = new THREE.Vector3(-3.87, 1.89, 1.46)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.33, 0.21, 0.08, 0.92)
+    actionsMap.set(id, {
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+      },
+    })
+  })
 }
 
 const createNavigationMarker = (scene: THREE.Scene) => {
@@ -932,6 +981,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createPlant1Model(scene, boxesMap)
   createClosetModel(scene, boxesMap)
   createCash(scene, boxesMap, actionsMap)
+  createBulbModel(scene, boxesMap, actionsMap)
 
   createLight(scene)
 
