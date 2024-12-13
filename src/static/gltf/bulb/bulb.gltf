@@ -3,11 +3,6 @@
 		"generator":"Khronos glTF Blender I/O v4.2.70",
 		"version":"2.0"
 	},
-	"extensionsUsed":[
-		"KHR_materials_transmission",
-		"KHR_materials_emissive_strength",
-		"KHR_materials_ior"
-	],
 	"scene":0,
 	"scenes":[
 		{
@@ -20,22 +15,13 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"lightbulb_01"
+			"name":"lightbulb_led"
 		}
 	],
 	"materials":[
 		{
-			"alphaMode":"BLEND",
 			"doubleSided":true,
-			"extensions":{
-				"KHR_materials_transmission":{
-					"transmissionFactor":1
-				},
-				"KHR_materials_ior":{
-					"ior":1.4500000476837158
-				}
-			},
-			"name":"lightbulb_01_glass",
+			"name":"lightbulb_led",
 			"normalTexture":{
 				"index":0
 			},
@@ -47,39 +33,11 @@
 					"index":2
 				}
 			}
-		},
-		{
-			"doubleSided":true,
-			"emissiveFactor":[
-				1,
-				1,
-				1
-			],
-			"emissiveTexture":{
-				"index":3
-			},
-			"extensions":{
-				"KHR_materials_emissive_strength":{
-					"emissiveStrength":10
-				}
-			},
-			"name":"lightbulb_01_base",
-			"normalTexture":{
-				"index":4
-			},
-			"pbrMetallicRoughness":{
-				"baseColorTexture":{
-					"index":5
-				},
-				"metallicRoughnessTexture":{
-					"index":6
-				}
-			}
 		}
 	],
 	"meshes":[
 		{
-			"name":"Cube.004",
+			"name":"Mesh.001",
 			"primitives":[
 				{
 					"attributes":{
@@ -89,15 +47,6 @@
 					},
 					"indices":3,
 					"material":0
-				},
-				{
-					"attributes":{
-						"POSITION":4,
-						"NORMAL":5,
-						"TEXCOORD_0":6
-					},
-					"indices":7,
-					"material":1
 				}
 			]
 		}
@@ -114,168 +63,84 @@
 		{
 			"sampler":0,
 			"source":2
-		},
-		{
-			"sampler":0,
-			"source":3
-		},
-		{
-			"sampler":0,
-			"source":0
-		},
-		{
-			"sampler":0,
-			"source":4
-		},
-		{
-			"sampler":0,
-			"source":2
 		}
 	],
 	"images":[
 		{
 			"mimeType":"image/jpeg",
-			"name":"lightbulb_01_nor_gl_2k",
-			"uri":"textures/lightbulb_01_nor_gl_2k.jpg"
-		},
-		{
-			"mimeType":"image/png",
-			"name":"lightbulb_01_diff_2k",
-			"uri":"textures/lightbulb_01_diff_2k.png"
+			"name":"lightbulb_led_nor_gl_2k",
+			"uri":"textures/lightbulb_led_nor_gl_2k.jpg"
 		},
 		{
 			"mimeType":"image/jpeg",
-			"name":"lightbulb_01_arm_2k",
-			"uri":"textures/lightbulb_01_arm_2k.jpg"
+			"name":"lightbulb_led_diff_2k",
+			"uri":"textures/lightbulb_led_diff_2k.jpg"
 		},
 		{
 			"mimeType":"image/jpeg",
-			"name":"lightbulb_01_emissive_2k",
-			"uri":"textures/lightbulb_01_emissive_2k.jpg"
-		},
-		{
-			"mimeType":"image/jpeg",
-			"name":"lightbulb_01_diff_2k",
-			"uri":"textures/lightbulb_01_diff_2k.jpg"
+			"name":"lightbulb_led_arm_2k",
+			"uri":"textures/lightbulb_led_arm_2k.jpg"
 		}
 	],
 	"accessors":[
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":691,
+			"count":3057,
 			"max":[
-				0.08082246780395508,
-				0.06144101917743683,
-				0.029995005577802658
+				0.030723808333277702,
+				0.08457458764314651,
+				0.030723808333277702
 			],
 			"min":[
-				0.006958466023206711,
-				0.001721748849377036,
-				-0.02999500185251236
+				-0.030723806470632553,
+				-0.015676606446504593,
+				-0.030723808333277702
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":691,
+			"count":3057,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":691,
+			"count":3057,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5123,
-			"count":3504,
-			"type":"SCALAR"
-		},
-		{
-			"bufferView":4,
-			"componentType":5126,
-			"count":1039,
-			"max":[
-				0.049469806253910065,
-				0.040452782064676285,
-				0.013957887887954712
-			],
-			"min":[
-				-0.01614169403910637,
-				0.0007109448197297752,
-				-0.01395934633910656
-			],
-			"type":"VEC3"
-		},
-		{
-			"bufferView":5,
-			"componentType":5126,
-			"count":1039,
-			"type":"VEC3"
-		},
-		{
-			"bufferView":6,
-			"componentType":5126,
-			"count":1039,
-			"type":"VEC2"
-		},
-		{
-			"bufferView":7,
-			"componentType":5123,
-			"count":3798,
+			"count":13713,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":8292,
+			"byteLength":36684,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":8292,
-			"byteOffset":8292,
+			"byteLength":36684,
+			"byteOffset":36684,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5528,
-			"byteOffset":16584,
+			"byteLength":24456,
+			"byteOffset":73368,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":7008,
-			"byteOffset":22112,
-			"target":34963
-		},
-		{
-			"buffer":0,
-			"byteLength":12468,
-			"byteOffset":29120,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":12468,
-			"byteOffset":41588,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":8312,
-			"byteOffset":54056,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":7596,
-			"byteOffset":62368,
+			"byteLength":27426,
+			"byteOffset":97824,
 			"target":34963
 		}
 	],
@@ -287,7 +152,7 @@
 	],
 	"buffers":[
 		{
-			"byteLength":69964,
+			"byteLength":125252,
 			"uri":"bulb.bin"
 		}
 	]
