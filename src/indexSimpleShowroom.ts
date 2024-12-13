@@ -10,7 +10,6 @@ import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
 import cashVertexShader from './shaders/showroom/cash/vertex.glsl'
 import cashFragmentShader from './shaders/showroom/cash/fragment.glsl'
-// import clockText from './static/texts/clock.txt'
 import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
 import cashText from './static/texts/cash.txt'
@@ -373,18 +372,22 @@ const createWalls = (scene: THREE.Scene) => {
   const wallNorth = new THREE.Mesh(geometry1, material1)
   wallNorth.position.set(0, wallHeight / 2 - offset, -(floorLength / 2 - offset))
   wallNorth.name = 'wall-north'
+  wallNorth.receiveShadow = true
   const wallSouth = new THREE.Mesh(geometry1, material1)
   wallSouth.position.set(0, wallHeight / 2 - offset, floorLength / 2 - offset)
   wallSouth.rotation.set(0, Math.PI, 0)
   wallSouth.name = 'wall-south'
+  wallSouth.receiveShadow = true
   const wallWest = new THREE.Mesh(geometry2, material2)
   wallWest.position.set(floorWidth / 2 - offset, wallHeight / 2 - offset, 0)
   wallWest.rotation.set(0, -Math.PI / 2, 0)
   wallWest.name = 'wall-west'
+  wallWest.receiveShadow = true
   const wallEast = new THREE.Mesh(geometry2, material2)
   wallEast.position.set(-(floorWidth / 2 - offset), wallHeight / 2 - offset, 0)
   wallEast.rotation.set(0, Math.PI / 2, 0)
   wallEast.name = 'wall-east'
+  wallEast.receiveShadow = true
   scene.add(wallNorth, wallSouth, wallWest, wallEast)
 }
 
@@ -557,6 +560,7 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
   },
   )
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.castShadow = true
   mesh.position.set(1.25, 1.756, -0.4)
   mesh.rotation.set(0, Math.PI / 2, 0)
   scene.add(mesh)
@@ -633,6 +637,7 @@ const createShelfModel = (scene: THREE.Scene) => {
     model.rotation.set(0, -Math.PI / 2, 0)
     model.traverse((child) => {
       child.castShadow = true
+      child.receiveShadow = true
     })
     scene.add(model)
   }, undefined, function (error) {
@@ -758,14 +763,27 @@ const createLight = (scene: THREE.Scene) => {
     lamp2.position.set(0, 3.08, -2)
     scene.add(lamp1, lamp2)
 
-    const pointLight = new THREE.PointLight(0xffffff, 2.5)
-    const light1 = pointLight.clone()
-    light1.castShadow = true
-    light1.position.set(0, 2.5, 2)
-    const light2 = pointLight.clone()
-    light2.castShadow = true
-    light2.position.set(0, 2.5, -2)
-    scene.add(light2, light1)
+    const spotLight = new THREE.SpotLight(0xffffff, 1.5, 10, Math.PI / 3, 0.3, 0.2)
+    spotLight.shadow.mapSize.width = 2048
+    spotLight.shadow.mapSize.height = 2048
+    spotLight.shadow.bias = -0.00005
+    spotLight.shadow.radius = 2
+    spotLight.castShadow = true
+    const spotLight1 = spotLight.clone()
+    spotLight1.position.set(0, 3.5, 2)
+    spotLight1.target.position.set(0, 0, 2)
+    const spotLight2 = spotLight.clone()
+    spotLight2.position.set(0, 3.5, -2)
+    spotLight2.target.position.set(0, 0, -2)
+    scene.add(spotLight2, spotLight1, spotLight1.target, spotLight2.target)
+
+    const pointLight = new THREE.PointLight(0xffffff, 1, 10, 1)
+    pointLight.castShadow = false
+    const pointLight1 = pointLight.clone()
+    pointLight1.position.set(0, 2.8, 2)
+    const pointLight2 = pointLight.clone()
+    pointLight2.position.set(0, 2.8, -2)
+    scene.add(pointLight1, pointLight2)
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
     scene.add(ambientLight)
