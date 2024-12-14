@@ -105,43 +105,56 @@ const quaternions: Quaternions = {
   last: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
 }
 
-const useControl = (camera: THREE.PerspectiveCamera, conatainer: HTMLElement) => {
+const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => {
   camera.rotation.order = 'YXZ'
   let isEnable = true
 
-  let isMouseDown = false
-  const prevMousePos = { x: 0, y: 0 }
+  let isActive = false
+  const prevPosition = { x: 0, y: 0 }
   let deltaX = 0
   let deltaY = 0
   const dampingFactorDefault = 0.95
   let dampingFactorCurrent = dampingFactorDefault
   let frameCount = 0
 
-  conatainer.addEventListener('mousedown', (event) => {
-    if (!isEnable) return
-    if (!(event.button == 0)) return
-    isMouseDown = true
-    prevMousePos.x = event.clientX
-    prevMousePos.y = event.clientY
-  })
-  conatainer.addEventListener('mouseup', () => {
-    if (!isEnable) return
-    isMouseDown = false
-  })
-  conatainer.addEventListener('mouseleave', () => {
-    if (!isEnable) return
-    isMouseDown = false
-  })
-  conatainer.addEventListener('mousemove', (event) => {
-    if (!isEnable) return
-    if (isMouseDown) {
-      deltaX = event.clientX - prevMousePos.x
-      deltaY = event.clientY - prevMousePos.y
-      dampingFactorCurrent = dampingFactorDefault
-      prevMousePos.x = event.clientX
-      prevMousePos.y = event.clientY
-    }
-  })
+  if (!isMobile) {
+    container.addEventListener('mousedown', (event) => {
+      if (isEnable && event.button == 0) {
+        isActive = true
+        prevPosition.x = event.clientX
+        prevPosition.y = event.clientY
+      }
+    })
+    container.addEventListener('mouseup', () => {
+      if (isEnable) {
+        isActive = false
+      }
+    })
+    container.addEventListener('mouseleave', () => {
+      if (isEnable) {
+        isActive = false
+      }
+    })
+    container.addEventListener('mousemove', (event) => {
+      if (isEnable && isActive) {
+        deltaX = event.clientX - prevPosition.x
+        deltaY = event.clientY - prevPosition.y
+        dampingFactorCurrent = dampingFactorDefault
+        prevPosition.x = event.clientX
+        prevPosition.y = event.clientY
+      }
+    })
+  } else {
+    container.addEventListener('touchmove', (event) => {
+      if (isEnable) {
+        deltaX = event.touches[0].clientX - prevPosition.x
+        deltaY = event.touches[0].clientY - prevPosition.y
+        dampingFactorCurrent = dampingFactorDefault
+        prevPosition.x = event.touches[0].clientX
+        prevPosition.y = event.touches[0].clientY
+      }
+    })
+  }
 
   const update = () => {
     if (frameCount > 1) {
@@ -157,6 +170,7 @@ const useControl = (camera: THREE.PerspectiveCamera, conatainer: HTMLElement) =>
   }
 
   const enable = (value: boolean) => {
+    isActive = false
     isEnable = value
   }
 
@@ -286,14 +300,12 @@ const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Action
   scene.add(mesh)
   const id = THREE.MathUtils.generateUUID()
   // set actions
-  const rightClickAction = ({ point, enableControl, enableEventHandlers, markers, camera }: ActionParams) => {
+  const rightClickAction = ({ point, enableEventHandlers, markers, camera }: ActionParams) => {
     const timeline = gsap.timeline({
       onStart: () => {
-        enableControl?.(false)
         enableEventHandlers(false)
       },
       onComplete: () => {
-        enableControl?.(true)
         enableEventHandlers(true)
       },
     })
