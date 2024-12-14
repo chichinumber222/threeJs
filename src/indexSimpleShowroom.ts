@@ -145,6 +145,12 @@ const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => 
       }
     })
   } else {
+    container.addEventListener('touchstart', (event) => {
+      if (isEnable) {
+        prevPosition.x = event.touches[0].clientX
+        prevPosition.y = event.touches[0].clientY
+      }
+    })
     container.addEventListener('touchmove', (event) => {
       if (isEnable) {
         deltaX = event.touches[0].clientX - prevPosition.x
