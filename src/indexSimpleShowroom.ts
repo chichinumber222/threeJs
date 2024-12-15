@@ -205,31 +205,37 @@ const descriptionModeAnimation = (
     onComplete: () => {
       let textElement: HTMLElement | null = null
       let exitButtonElement: HTMLElement | null = null
-      switch (descriptionOptions.position) {
-        case 'left': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
-          textElement.style.width = descriptionOptions?.width || '35%'
-          break
+      if (!isMobile) {
+        switch (descriptionOptions.position) {
+          case 'left': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+            textElement.style.width = descriptionOptions?.width || '35%'
+            break
+          }
+          case 'right': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
+            textElement.style.width = descriptionOptions?.width || '35%'
+            break
+          }
+          case 'top': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
+            textElement.style.height = descriptionOptions?.height || '25%'
+            break
+          }
+          case 'bottom': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
+            textElement.style.height = descriptionOptions?.height || '25%'
+            break
+          }
         }
-        case 'right': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
-          textElement.style.width = descriptionOptions?.width || '35%'
-          break
-        }
-        case 'top': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
-          textElement.style.height = descriptionOptions?.height || '25%'
-          break
-        }
-        case 'bottom': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
-          textElement.style.height = descriptionOptions?.height || '25%'
-          break
-        }
+      } else {
+        textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+        textElement.style.width = '90%'
       }
       textElement.innerHTML = `${descriptionOptions.text}`
       const exit = (event: MouseEvent) => {
@@ -248,25 +254,27 @@ const descriptionModeAnimation = (
       exitButtonElement.classList.remove('no_visible')
     }
   })
-  timeline.addLabel("start", 0)
-  const startQuaternion = camera.quaternion.clone()
-  const endQuaternion = stopQuaternion.clone()
-  timeline.to({ t: 0 }, {
-    duration: 1.5,
-    t: 1,
-    ease: "none",
-    onUpdate: function () {
-      const t = this.targets()[0].t
-      camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
-    }
-  }, "start")
-  timeline.to(camera.position, {
-    duration: 1.5,
-    ease: "none",
-    x: stopPosition.x,
-    z: stopPosition.z,
-    y: stopPosition.y,
-  }, "start")
+  if (!isMobile) {
+    timeline.addLabel("start", 0)
+    const startQuaternion = camera.quaternion.clone()
+    const endQuaternion = stopQuaternion.clone()
+    timeline.to({ t: 0 }, {
+      duration: 1.5,
+      t: 1,
+      ease: "none",
+      onUpdate: function () {
+        const t = this.targets()[0].t
+        camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
+      }
+    }, "start")
+    timeline.to(camera.position, {
+      duration: 1.5,
+      ease: "none",
+      x: stopPosition.x,
+      z: stopPosition.z,
+      y: stopPosition.y,
+    }, "start")
+  }
 }
 
 const createWoodFloor = (scene: THREE.Scene) => {
