@@ -480,6 +480,13 @@ const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: 
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+      },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
       }
     })
     // set box
@@ -519,6 +526,13 @@ const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
       },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
     })
     // set box
     const boundingBox = new THREE.Box3().setFromObject(model)
@@ -599,6 +613,13 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
     leftClick: (params: ActionParams) => {
       descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'bottom', height: '30%' })
     },
+    hover: (params: HoverParams) => {
+      if (params.enable) {
+        document.body.style.cursor = 'pointer'
+        return
+      }
+      document.body.style.cursor = 'default'
+    }
   })
   // set box
   const boundingBox = new THREE.Box3().setFromObject(mesh)
@@ -635,6 +656,13 @@ const createBulbModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Act
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
       },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
     })
     // set box
     const boundingBox = new THREE.Box3().setFromObject(model)
@@ -721,14 +749,14 @@ const initActions = (
 
   let prevActiveId: string | null = null
   const hover = (event?: MouseEvent) => {
-    if (!isActiveHover) {
-      return
-    }
-    event?.preventDefault()
     if (prevActiveId !== null) {
       actionsMap.get(prevActiveId)?.hover?.({ enable: false, markers })
       prevActiveId = null
     }
+    if (!isActiveHover) {
+      return
+    }
+    event?.preventDefault()
     raycaster.setFromCamera(mouse, camera)
     const intersected = raycaster.intersectObjects([...boxesMap.values()])
     if (intersected.length) {
