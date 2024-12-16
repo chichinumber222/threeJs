@@ -115,6 +115,8 @@ const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => 
   let deltaY = 0
   const dampingFactorDefault = 0.95
   let dampingFactorCurrent = dampingFactorDefault
+  const maxAngleX = Math.PI / 3
+  const minAngleX = -Math.PI / 3
   let frameCount = 0
 
   if (!isMobile) {
@@ -170,8 +172,10 @@ const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => 
     frameCount++
     const rotationDistanceY = deltaX * dampingFactorCurrent * 0.003
     const rotationDistanceX = deltaY * dampingFactorCurrent * 0.003
+    if ((camera.rotation.x + rotationDistanceX) <= maxAngleX && (camera.rotation.x + rotationDistanceX) >= minAngleX) {
+      camera.rotation.x += rotationDistanceX
+    }
     camera.rotation.y += rotationDistanceY
-    camera.rotation.x += rotationDistanceX
     camera.rotation.z = 0
   }
 
