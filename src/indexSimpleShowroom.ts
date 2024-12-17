@@ -812,7 +812,7 @@ const initActions = (
 }
 
 const createLight = (scene: THREE.Scene) => {
-  gltfLoader.load('./static/gltf/lamp/lamp.glb', (gltf) => {
+  gltfLoader.load('./static/gltf/lamp/lamp_colored6.gltf', (gltf) => {
     const lampModel = gltf.scene
     lampModel.scale.set(1, 0.8, 1)
     const lamp1 = lampModel.clone()
@@ -835,12 +835,12 @@ const createLight = (scene: THREE.Scene) => {
     spotLight2.target.position.set(0, 0, -2)
     scene.add(spotLight2, spotLight1, spotLight1.target, spotLight2.target)
 
-    const pointLight = new THREE.PointLight(0xffffff, 1, 10, 1)
+    const pointLight = new THREE.PointLight(0xffffff, 0.5, 10, 1)
     pointLight.castShadow = false
     const pointLight1 = pointLight.clone()
-    pointLight1.position.set(0, 2.8, 2)
+    pointLight1.position.set(0, 3.17, 2)
     const pointLight2 = pointLight.clone()
-    pointLight2.position.set(0, 2.8, -2)
+    pointLight2.position.set(0, 3.17, -2)
     scene.add(pointLight1, pointLight2)
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
