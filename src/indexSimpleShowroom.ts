@@ -8,6 +8,8 @@ import _ from 'lodash'
 import { mobileCheck } from "./utils/mobile-check"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
+import ceilingPlinthVertexShader from './shaders/showroom/ceiling-plinth/vertex.glsl'
+import ceilingPlinthFragmentShader from './shaders/showroom/ceiling-plinth/fragment.glsl'
 import cashVertexShader from './shaders/showroom/cash/vertex.glsl'
 import cashFragmentShader from './shaders/showroom/cash/fragment.glsl'
 import dartBoard from './static/texts/dartBoard.txt'
@@ -94,6 +96,8 @@ const floorLength = 12
 const wallHeight = 4
 const plinthHeight = 0.1
 const plinthDepth = 0.03
+const ceilingPlinthHeight = 0.25
+const ceilingPlinthDepth = 0.03
 const offset = 0.1
 const floorOffset = 0.5
 const positions: Positions = {
@@ -433,22 +437,52 @@ const createPlinths = (scene: THREE.Scene) => {
       }
     },
   })
-  const plinthNorth = new THREE.Mesh(geometry1, material)
-  plinthNorth.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
-  plinthNorth.name = 'plinth-north'
-  const plinthSouth = new THREE.Mesh(geometry1, material)
-  plinthSouth.position.set(0, plinthHeight / 2 + 0.001, floorLength / 2 - offset - plinthDepth / 2 - 0.001)
-  plinthSouth.rotation.set(0, Math.PI, 0)
-  plinthSouth.name = 'plinth-south'
-  const plinthWest = new THREE.Mesh(geometry2, material)
-  plinthWest.position.set(floorWidth / 2 - offset - plinthDepth / 2 - 0.001, plinthHeight / 2 + 0.001, 0)
-  plinthWest.rotation.set(0, -Math.PI / 2, 0)
-  plinthWest.name = 'plinth-west'
-  const plinthEast = new THREE.Mesh(geometry2, material)
-  plinthEast.position.set(-(floorWidth / 2 - offset - plinthDepth / 2 - 0.001), plinthHeight / 2 + 0.001, 0)
-  plinthEast.rotation.set(0, Math.PI / 2, 0)
-  plinthEast.name = 'plinth-east'
-  scene.add(plinthNorth, plinthSouth, plinthWest, plinthEast)
+  const north = new THREE.Mesh(geometry1, material)
+  north.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
+  north.name = 'plinth-north'
+  const south = new THREE.Mesh(geometry1, material)
+  south.position.set(0, plinthHeight / 2 + 0.001, floorLength / 2 - offset - plinthDepth / 2 - 0.001)
+  south.rotation.set(0, Math.PI, 0)
+  south.name = 'plinth-south'
+  const west = new THREE.Mesh(geometry2, material)
+  west.position.set(floorWidth / 2 - offset - plinthDepth / 2 - 0.001, plinthHeight / 2 + 0.001, 0)
+  west.rotation.set(0, -Math.PI / 2, 0)
+  west.name = 'plinth-west'
+  const east = new THREE.Mesh(geometry2, material)
+  east.position.set(-(floorWidth / 2 - offset - plinthDepth / 2 - 0.001), plinthHeight / 2 + 0.001, 0)
+  east.rotation.set(0, Math.PI / 2, 0)
+  east.name = 'plinth-east'
+  scene.add(north, south, west, east)
+}
+
+const createCeilingPlinths = (scene: THREE.Scene) => {
+  const geometry1 = new THREE.BoxGeometry(floorWidth, ceilingPlinthHeight, ceilingPlinthDepth, 50, 25)
+  const geometry2 = new THREE.BoxGeometry(floorLength, ceilingPlinthHeight, ceilingPlinthDepth, 50, 25)
+  const material = new THREE.ShaderMaterial({
+    vertexShader: ceilingPlinthVertexShader,
+    fragmentShader: ceilingPlinthFragmentShader,
+    uniforms: {
+      vBoxHeight: {
+        value: ceilingPlinthHeight,
+      }
+    },
+  })
+  const north = new THREE.Mesh(geometry1, material)
+  north.position.set(0, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, -(floorLength / 2 - offset - ceilingPlinthDepth / 2 - 0.001))
+  north.name = 'ceiling-plinth-north'
+  const south = new THREE.Mesh(geometry1, material)
+  south.position.set(0, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, floorLength / 2 - offset - ceilingPlinthDepth / 2 - 0.001)
+  south.rotation.set(0, Math.PI, 0)
+  south.name = 'ceiling-plinth-south'
+  const west = new THREE.Mesh(geometry2, material)
+  west.position.set(floorWidth / 2 - offset - ceilingPlinthDepth / 2 - 0.001, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, 0)
+  west.rotation.set(0, -Math.PI / 2, 0)
+  west.name = 'ceiling-plinth-west'
+  const east = new THREE.Mesh(geometry2, material)
+  east.position.set(-(floorWidth / 2 - offset - ceilingPlinthDepth / 2 - 0.001), wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, 0)
+  east.rotation.set(0, Math.PI / 2, 0)
+  east.name = 'ceiling-plinth-east'
+  scene.add(north, south, west, east)
 }
 
 const createCeiling = (scene: THREE.Scene) => {
@@ -864,6 +898,7 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createWoodFloor(scene)
   createWalls(scene)
   createPlinths(scene)
+  createCeilingPlinths(scene)
   createCeiling(scene)
   createPlantModel(scene, boxesMap)
   createShelfModel(scene)
