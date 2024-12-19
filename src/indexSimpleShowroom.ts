@@ -1,6 +1,6 @@
 import * as THREE from "three"
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
-import { stats } from "./utils/stats"
+import Stats from 'stats.js'
 import { onChangeCursor } from "./utils/update-coord"
 import gsap from 'gsap'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -108,6 +108,15 @@ const positions: Positions = {
 const quaternions: Quaternions = {
   start: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
   last: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
+}
+
+const initStats = () => {
+  const stats = new Stats()
+  stats.dom.style.position = 'absolute'
+  stats.dom.style.top = '0px'
+  stats.dom.style.left = '0px'
+  document.body.appendChild(stats.dom)
+  return stats
 }
 
 const initStart = () => {
@@ -928,6 +937,8 @@ initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
   createLight(scene)
 
   await initStart()
+
+  const stats = initStats()
 
   if (isFlyMode()) {
     orbitControls!.minPolarAngle = -Math.PI
