@@ -87,8 +87,9 @@ const props: InitSceneProps = {
 }
 
 const isMobile = mobileCheck()
-const textureLoader = new THREE.TextureLoader()
-const gltfLoader = new GLTFLoader()
+const loadingManager = new THREE.LoadingManager()
+const textureLoader = new THREE.TextureLoader(loadingManager)
+const gltfLoader = new GLTFLoader(loadingManager)
 const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
 const floorWidth = 3
@@ -107,6 +108,26 @@ const positions: Positions = {
 const quaternions: Quaternions = {
   start: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
   last: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
+}
+
+const initStart = () => {
+  return new Promise((resolve) => {
+    const startMenu = <HTMLElement>document.getElementsByClassName('start_menu')[0]
+    const run = <HTMLButtonElement>document.getElementsByClassName('run')[0]
+    const persentage = <HTMLElement>document.querySelector('.run .persentage')
+    loadingManager.onProgress = function (_, itemsLoaded, itemsTotal) {
+      persentage.innerHTML = `${Math.round((itemsLoaded / itemsTotal) * 100)}`
+    }
+    loadingManager.onLoad = function () {
+      run.innerHTML = `Enter to room`
+      run.disabled = false
+    }
+    run.addEventListener('click', (event) => {
+      event.stopPropagation()
+      resolve(true)
+      startMenu.classList.add('no_visible')
+    })
+  })
 }
 
 const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => {
@@ -884,7 +905,7 @@ const createLight = (scene: THREE.Scene) => {
   })
 }
 
-initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
 
@@ -905,6 +926,8 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   createCash(scene, boxesMap, actionsMap)
 
   createLight(scene)
+
+  await initStart()
 
   if (isFlyMode()) {
     orbitControls!.minPolarAngle = -Math.PI
@@ -933,7 +956,6 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
 
     let frameCounter = 0
     function animate() {
-
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
 
