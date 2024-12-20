@@ -687,7 +687,7 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
   const cameraStopQuaternion = new THREE.Quaternion(-0.24, -0.65, -0.23, 0.69)
   actionsMap.set(id, {
     leftClick: (params: ActionParams) => {
-      descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'bottom', height: '30%' })
+      descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'bottom', height: '35%' })
     },
     hover: (params: HoverParams) => {
       if (params.enable) {
