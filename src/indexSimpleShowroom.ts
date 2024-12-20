@@ -221,6 +221,12 @@ const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => 
   return [update, enable] as const
 }
 
+const loadTexture = (url: string) => {
+  const result = textureLoader.load(url)
+  result.colorSpace = THREE.SRGBColorSpace
+  return result
+}
+
 const getRepeatableTexture = (texture: THREE.Texture, repeatCountX: number = 5, repeatCountY: number = 5) => {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
@@ -320,9 +326,9 @@ const createWoodFloor = (scene: THREE.Scene) => {
     new THREE.PlaneGeometry(floorWidth, floorLength),
     new THREE.MeshStandardMaterial({
       color: 0xcccccc,
-      map: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/color.jpg'), 3, 10),
-      normalMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/normal.jpg'), 3, 10),
-      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/rough.jpg'), 3, 10),
+      map: getRepeatableTexture(loadTexture('static/textures/wood-floor/color.jpg'), 3, 10),
+      normalMap: getRepeatableTexture(loadTexture('static/textures/wood-floor/normal.jpg'), 3, 10),
+      roughnessMap: getRepeatableTexture(loadTexture('static/textures/wood-floor/rough.jpg'), 3, 10),
     })
   )
   mesh.rotation.x = - Math.PI * 0.5
@@ -337,17 +343,18 @@ const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Action
     new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
-      map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg'), 1, 4),
-      normalMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/normal.jpg'), 1, 4),
-      aoMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/ao.jpg'), 1, 4),
-      aoMapIntensity: 0.7,
-      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/rough.jpg'), 1, 4),
+      map: getRepeatableTexture(loadTexture('static/textures/carpet/color.jpg'), 1, 4),
+      normalMap: getRepeatableTexture(loadTexture('static/textures/carpet/normal.jpg'), 1, 4),
+      aoMap: getRepeatableTexture(loadTexture('static/textures/carpet/ao.jpg'), 1, 4),
+      aoMapIntensity: 0.3,
+      roughnessMap: getRepeatableTexture(loadTexture('static/textures/carpet/rough.jpg'), 1, 4),
     })
   )
   mesh.rotation.x = -Math.PI * 0.5
   mesh.position.y += 0.02
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.receiveShadow = true
+  mesh.castShadow = false
   mesh.name = 'carpet'
   scene.add(mesh)
   const id = THREE.MathUtils.generateUUID()
@@ -423,14 +430,14 @@ const createWalls = (scene: THREE.Scene) => {
   const geometry2 = new THREE.PlaneGeometry(floorLength, wallHeight)
   const material1 = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
-    map: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/color.jpg'), 2, 2),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/normal.jpg'), 2, 2),
+    map: getRepeatableTexture(loadTexture('static/textures/wallpaper/color.jpg'), 2, 2),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/wallpaper/normal.jpg'), 2, 2),
     roughness: 0.35,
   })
   const material2 = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
-    map: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/color.jpg'), 7, 2),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/normal.jpg'), 7, 2),
+    map: getRepeatableTexture(loadTexture('static/textures/wallpaper/color.jpg'), 7, 2),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/wallpaper/normal.jpg'), 7, 2),
     roughness: 0.35,
   })
   const wallNorth = new THREE.Mesh(geometry1, material1)
@@ -519,10 +526,11 @@ const createCeiling = (scene: THREE.Scene) => {
   const geometry = new THREE.PlaneGeometry(floorWidth, floorLength)
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: getRepeatableTexture(textureLoader.load('static/textures/ceiling/color.jpg'), 4, 4),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/normal.jpg'), 4, 4),
-    roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/rough.jpg'), 4, 4),
+    map: getRepeatableTexture(loadTexture('static/textures/ceiling/color.jpg'), 4, 4),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/ceiling/normal.jpg'), 4, 4),
+    roughnessMap: getRepeatableTexture(loadTexture('static/textures/ceiling/rough.jpg'), 4, 4),
   })
+  material.color.setScalar(2.0)
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.set(Math.PI / 2, 0, 0)
   mesh.position.set(0, wallHeight - offset, 0)
@@ -660,8 +668,8 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
     vertexShader: cashVertexShader,
     fragmentShader: cashFragmentShader,
     uniforms: {
-      uTextureFront: { value: textureLoader.load('./static/textures/cash/front.jpg') },
-      uTextureBack: { value: textureLoader.load('./static/textures/cash/back.jpg') },
+      uTextureFront: { value: loadTexture('./static/textures/cash/front.jpg') },
+      uTextureBack: { value: loadTexture('./static/textures/cash/back.jpg') },
       uDepth: { value: fluctuationsDepth },
       uFrequency: { value: fluctuationsFrequency },
     }
@@ -669,7 +677,7 @@ const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsM
   )
   const mesh = new THREE.Mesh(geometry, material)
   mesh.castShadow = true
-  mesh.position.set(1.25, 1.756, -0.4)
+  mesh.position.set(1.25, 1.76, -0.4)
   mesh.rotation.set(0, Math.PI / 2, 0)
   scene.add(mesh)
   const id = THREE.MathUtils.generateUUID()
@@ -718,8 +726,8 @@ const createBulbModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Act
     const id = THREE.MathUtils.generateUUID()
     // set actions
     const descriptionText = `${bulbText}`
-    const cameraStopPosition = new THREE.Vector3(0.98, 0.25, -2.019)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.44, -0.43, -0.26, 0.74)
+    const cameraStopPosition = new THREE.Vector3(1.022, 0.198, -2.01)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.33, -0.58, -0.27, 0.69)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
         descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
@@ -885,7 +893,7 @@ const createLight = (scene: THREE.Scene) => {
     lamp2.position.set(0, 3.08, -2)
     scene.add(lamp1, lamp2)
 
-    const spotLight = new THREE.SpotLight(0xffffff, 1.5, 10, Math.PI / 3, 0.3, 0.2)
+    const spotLight = new THREE.SpotLight(0xffffff, 4, 10, Math.PI / 3, 0.3, 0.3)
     spotLight.shadow.mapSize.width = 2048
     spotLight.shadow.mapSize.height = 2048
     spotLight.shadow.bias = -0.00005
@@ -899,7 +907,7 @@ const createLight = (scene: THREE.Scene) => {
     spotLight2.target.position.set(0, 0, -2)
     scene.add(spotLight2, spotLight1, spotLight1.target, spotLight2.target)
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.5, 10, 1)
+    const pointLight = new THREE.PointLight(0xffffff, 1, 10, 1)
     pointLight.castShadow = false
     const pointLight1 = pointLight.clone()
     pointLight1.position.set(0, 3.17, 2)
@@ -907,7 +915,7 @@ const createLight = (scene: THREE.Scene) => {
     pointLight2.position.set(0, 3.17, -2)
     scene.add(pointLight1, pointLight2)
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2)
     scene.add(ambientLight)
   }, undefined, function (error) {
     console.error('error model', error)
@@ -917,6 +925,7 @@ const createLight = (scene: THREE.Scene) => {
 initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
+  renderer.toneMapping = THREE.ReinhardToneMapping
 
   const boxesMap: BoxesMap = new Map()
   const actionsMap: ActionsMap = new Map()

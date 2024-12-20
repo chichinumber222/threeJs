@@ -5,34 +5,34 @@ import { initOrbitControls } from '../controller/orbit'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 export interface Props {
-    backgroundColor?: THREE.Color
-    fogColor?: THREE.ColorRepresentation
-    disableShadows?: boolean
-    disableDefaultLights?: boolean
-    disableShadowsOnDefaultLights?: boolean
-    disableDefaultControls?: boolean
-    canvasElement?: HTMLCanvasElement 
+  backgroundColor?: THREE.Color
+  fogColor?: THREE.ColorRepresentation
+  disableShadows?: boolean
+  disableDefaultLights?: boolean
+  disableShadowsOnDefaultLights?: boolean
+  disableDefaultControls?: boolean
+  canvasElement?: HTMLCanvasElement
 }
 
 export interface Params {
-    scene: THREE.Scene
-    camera: THREE.PerspectiveCamera
-    renderer: THREE.WebGLRenderer
-    orbitControls?: OrbitControls
+  scene: THREE.Scene
+  camera: THREE.PerspectiveCamera
+  renderer: THREE.WebGLRenderer
+  orbitControls?: OrbitControls
 }
 
 export interface Fn {
-    (args: Params): void
+  (args: Params): void
 }
 
-export const initScene = ({ 
-  backgroundColor, 
-  fogColor, 
-  disableShadows, 
-  disableDefaultLights, 
-  disableShadowsOnDefaultLights, 
-  disableDefaultControls, 
-  canvasElement, 
+export const initScene = ({
+  backgroundColor,
+  fogColor,
+  disableShadows,
+  disableDefaultLights,
+  disableShadowsOnDefaultLights,
+  disableDefaultControls,
+  canvasElement,
 }: Props) => {
   return (fn: Fn) => {
     // basic scene setup
@@ -59,7 +59,7 @@ export const initScene = ({
       document.body.appendChild(renderer.domElement)
     }
     // init orbit controls
-    let orbitControls 
+    let orbitControls
     if (!disableDefaultControls) {
       orbitControls = initOrbitControls(camera, renderer)
     }
