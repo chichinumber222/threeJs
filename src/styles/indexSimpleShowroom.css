@@ -118,7 +118,7 @@ body {
 
 .start_menu {
     background-color: #0093E9;
-    background-image: linear-gradient(114deg, #0093E9 0%, #80D0C7 100%);
+    background-image: linear-gradient(114deg, #1173ac 0%, #6fc3ba 100%);
     position: fixed;
     top: 0%;
     left: 0%;
@@ -133,7 +133,7 @@ body {
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: row;
-    gap: 3vmax;
+    gap: 4vmax;
     opacity: 0.7;
     user-select: none;
     -webkit-user-select: none;
@@ -147,24 +147,24 @@ body {
 }
 
 .controls .picture_for_control {
-    height: 5vmax;
+    height: 7vmax;
 }
 
 .controls .text_for_control {
     font-style: italic;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 /* mobile device */
 @media (pointer: coarse) {
     .camera_control .picture_for_control {
-        content: url("../static/hand-directions.png");
+        content: url("../static/hand_directions.png");
     }
     .communications_control .picture_for_control {
-        content: url('../static/hand-press.png');
+        content: url('../static/hand_press.png');
     }
     .movement_control .picture_for_control {
-        content: url('../static/hand-long-press.png');
+        content: url('../static/hand_long_press.png');
     }
 }
 
@@ -174,10 +174,10 @@ body {
         content: url('../static/mouse_directions.png');
     }
     .communications_control .picture_for_control {
-        content: url('../static/mouse-left-click.png');
+        content: url('../static/mouse_left_click.png');
     }
     .movement_control .picture_for_control {
-        content: url('../static/mouse-right-click.png');
+        content: url('../static/mouse_right_click.png');
     }
 }
 

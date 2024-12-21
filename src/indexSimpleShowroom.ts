@@ -128,7 +128,7 @@ const initStart = () => {
       persentage.innerHTML = `${Math.round((itemsLoaded / itemsTotal) * 100)}`
     }
     loadingManager.onLoad = function () {
-      run.innerHTML = `Enter to room`
+      run.innerHTML = `Enter the room`
       run.disabled = false
     }
     run.addEventListener('click', (event) => {
