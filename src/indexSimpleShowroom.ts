@@ -288,6 +288,7 @@ const descriptionModeAnimation = (
         camera.quaternion.copy(quaternions.last || quaternions.start)
         enableEventHandlers(true)
         enableControl?.(true)
+        textElement.scrollTop = 0
         textElement.classList.add('no_visible')
         exitButtonElement.classList.add('no_visible')
         textElement.innerHTML = ``
