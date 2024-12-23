@@ -252,7 +252,7 @@ void main() {
     // float strength = 1.0 - step(0.01, abs(distance(vec2(0.5), wavedUv) - 0.25));
 
     // Pattern 40
-    //* angle(y, x) - вычисляет угол в прямоугольном треугольнике между гипотенузой и одним из катетов
+    //* atan(y, x) - вычисляет угол в прямоугольном треугольнике между гипотенузой и одним из катетов
     // float angle = atan(vUv.x, vUv.y);
     // float strength = angle;
 

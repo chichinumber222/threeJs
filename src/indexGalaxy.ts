@@ -3,18 +3,17 @@ import GUI from 'lil-gui'
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
 import { stats } from './utils/stats'
 import { initHelpersControls } from './controls/helper-controls'
-import { initOrbitControls, OrbitControls } from './controller/orbit'
+import galaxyVertexShader from './shaders/galaxy/vertex.glsl'
+import galaxyFragmentShader from './shaders/galaxy/fragment.glsl'
 
 const props: InitSceneProps = {
   backgroundColor: new THREE.Color(0x04141f),
-  disableDefaultControls: true,
 }
 
 const gui = new GUI()
-const textureLoader = new THREE.TextureLoader()
 
 interface GalaxyParameters {
-  pointSize: number 
+  pointSize: number
   pointsCount: number
   radius: number
   branches: number
@@ -24,24 +23,25 @@ interface GalaxyParameters {
   insideColor: string
   outsideColor: string
 }
-type GalaxyCreateFunc = (param: GalaxyParameters) => void
+type Galaxy = THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+type GalaxyCreateFunc = (param: GalaxyParameters) => Galaxy
 
 const galaxyParameters: GalaxyParameters = {
-  pointSize: 0.15,
-  pointsCount: 15000,
-  radius: 14,
-  branches: 6,
+  pointSize: 35,
+  pointsCount: 50000,
+  radius: 5,
+  branches: 5,
   spinPower: 0.33,
-  frequencyPower: 2.5,
-  frequencyDistance: 1.2,
-  insideColor: '#ff7214', 
+  frequencyPower: 3,
+  frequencyDistance: 0.5,
+  insideColor: '#ff7214',
   outsideColor: '#00aeff',
 }
 
-const useGalaxy = (scene: THREE.Scene): GalaxyCreateFunc  => {
+const useGalaxy = (scene: THREE.Scene, renderer: THREE.WebGLRenderer): GalaxyCreateFunc => {
   let geometry: THREE.BufferGeometry | null = null
-  let material: THREE.PointsMaterial | null = null
-  let points: THREE.Points | null = null
+  let material: THREE.ShaderMaterial | null = null
+  let points: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null
   return (param: GalaxyParameters) => {
     //* Clear
     if (points !== null) {
@@ -51,32 +51,46 @@ const useGalaxy = (scene: THREE.Scene): GalaxyCreateFunc  => {
     }
     //* Create
     geometry = new THREE.BufferGeometry()
-    material = new THREE.PointsMaterial({
-      size: param.pointSize,
-      sizeAttenuation: true,
-      depthWrite: false, 
+    material = new THREE.ShaderMaterial({
+      depthWrite: false,
       blending: THREE.AdditiveBlending,
       vertexColors: true,
-      alphaMap: textureLoader.load('./static/textures/stars/star_01 2.png'),
+      vertexShader: galaxyVertexShader,
+      fragmentShader: galaxyFragmentShader,
+      uniforms: {
+        uTime: {
+          value: 0,
+        },
+        uSize: {
+          value: param.pointSize * renderer.getPixelRatio(),
+        },
+      },
+      transparent: true,
     })
     points = new THREE.Points(geometry, material)
 
     const positions = new Float32Array(param.pointsCount * 3)
     const angle = (2 * Math.PI) / param.branches
-    const colors =  new Float32Array(param.pointsCount * 3)
+    const randomness = new Float32Array(param.pointsCount * 3)
+    const colors = new Float32Array(param.pointsCount * 3)
     const insideColor = new THREE.Color(param.insideColor)
     const outsideColor = new THREE.Color(param.outsideColor)
+    const scales = new Float32Array(param.pointsCount * 1)
     for (let i = 0; i < param.pointsCount; i++) {
       // position
       const randomRadius = Math.random() * param.radius
       const currentAngle = angle * (i + 1)
       const spinAngle = param.spinPower * randomRadius
+      positions[i * 3] = Math.sin(currentAngle + spinAngle) * randomRadius
+      positions[i * 3 + 1] = 0.0
+      positions[i * 3 + 2] = Math.cos(currentAngle + spinAngle) * randomRadius
+      // randomness
       const spreadOutX = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
       const spreadOutY = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
       const spreadOutZ = Math.pow(Math.random(), param.frequencyPower) * (Math.random() >= 0.5 ? -1 : 1) * param.frequencyDistance
-      positions[i * 3] = Math.sin(currentAngle + spinAngle) * randomRadius + spreadOutX
-      positions[i * 3 + 1] = spreadOutY
-      positions[i * 3 + 2] = Math.cos(currentAngle + spinAngle) * randomRadius + spreadOutZ
+      randomness[i * 3] = spreadOutX
+      randomness[i * 3 + 1] = spreadOutY
+      randomness[i * 3 + 2] = spreadOutZ
       // color
       const currentInterolatePower = randomRadius / param.radius
       const currentColor = insideColor.clone()
@@ -84,17 +98,23 @@ const useGalaxy = (scene: THREE.Scene): GalaxyCreateFunc  => {
       colors[i * 3] = currentColor.r
       colors[i * 3 + 1] = currentColor.g
       colors[i * 3 + 2] = currentColor.b
+      // scales
+      scales[i] = Math.random()
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1))
+    geometry.setAttribute('aRandomness', new THREE.BufferAttribute(randomness, 3))
+    points.name = 'galaxy'
     scene.add(points)
+    return points
   }
 }
 
 const initGalaxyControls = (gui: GUI, parameters: GalaxyParameters, updateCb?: GalaxyCreateFunc) => {
   const galaxyDebugFolder = gui.addFolder('Galaxy')
-  galaxyDebugFolder.add(parameters, 'pointSize').min(0).max(0.15).step(0.001)
-  galaxyDebugFolder.add(parameters, 'pointsCount').min(100).max(20000).step(1)
+  galaxyDebugFolder.add(parameters, 'pointSize').min(0).max(60).step(1.0)
+  galaxyDebugFolder.add(parameters, 'pointsCount').min(100).max(100000).step(1)
   galaxyDebugFolder.add(parameters, 'radius').min(0).max(20).step(0.01)
   galaxyDebugFolder.add(parameters, 'branches').min(3).max(10).step(1)
   galaxyDebugFolder.add(parameters, 'spinPower').min(-2).max(2).step(0.01)
@@ -108,30 +128,24 @@ const initGalaxyControls = (gui: GUI, parameters: GalaxyParameters, updateCb?: G
   galaxyDebugFolder.close()
 }
 
-initScene(props)(({ scene, camera, renderer }) => {
-  const centerScene = new THREE.Vector3(0, 0, 0)
-  let controls: OrbitControls | null = null
+initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+  camera.position.set(4, 6, 9)
 
-  const createGalaxy = useGalaxy(scene)
+  const createGalaxy = useGalaxy(scene, renderer)
   createGalaxy(galaxyParameters)
 
-  let cameraAnimation = true
-  const clock  = new THREE.Clock()
+  const clock = new THREE.Clock()
   function animate() {
-    if (cameraAnimation) {
-      const elapsedTime = clock.getElapsedTime()
-      if (elapsedTime < 4) {
-        camera.position.set(Math.pow(elapsedTime, 3) * 0.2, Math.pow(elapsedTime, 3) * 0.2, Math.pow(elapsedTime, 3) * 0.2)
-        camera.lookAt(centerScene)
-      } else {
-        controls = initOrbitControls(camera, renderer)
-        cameraAnimation = false
-      }
-    } else {
-      controls?.update()
+    const elapsedTime = clock.getElapsedTime()
+
+    const galaxy = scene.getObjectByName('galaxy')
+    if (galaxy) {
+      (galaxy as Galaxy).material.uniforms.uTime.value = elapsedTime
     }
+
     requestAnimationFrame(animate)
     renderer.render(scene, camera)
+    orbitControls?.update()
     stats.update()
   }
   animate()
