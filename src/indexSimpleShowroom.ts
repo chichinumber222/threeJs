@@ -16,6 +16,7 @@ import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
 import cashText from './static/texts/cash.txt'
 import bulbText from './static/texts/bulb.txt'
+import vinylText from './static/texts/vinyl.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
@@ -776,6 +777,53 @@ const createShelfModel = (scene: THREE.Scene) => {
   })
 }
 
+const createVinyl = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  gltfLoader.load('./static/gltf/vinyl/vinyl.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.12, 0.12, 0.12)
+    model.position.set(1.35, 2.569, -0.6)
+    model.rotation.order = 'YZX'
+    model.rotation.set(-4 * Math.PI / 9, Math.PI / 2, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
+    const descriptionText = `${vinylText}`
+    const cameraStopPosition = new THREE.Vector3(1.066, 2.59, -0.16)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.04, -0.58, -0.03, 0.81)
+    actionsMap.set(id, {
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
+      },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
+    })
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x / 1.3, boundingBoxSize.y / 1.3, boundingBoxSize.z / 1.3),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
 const createNavigationMarker = (scene: THREE.Scene) => {
   const group = new THREE.Group()
   const baseGeometry = new THREE.CircleGeometry(0.3, 30)
@@ -943,6 +991,7 @@ initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
   createPlantModel(scene, boxesMap)
   createShelfModel(scene)
   createCash(scene, boxesMap, actionsMap)
+  createVinyl(scene, boxesMap, actionsMap)
 
   createLight(scene)
 
