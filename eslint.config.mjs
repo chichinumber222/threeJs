@@ -11,7 +11,7 @@ export default [
   {
     rules: {
       "semi": ["error", "never"],
-      "indent": ["error", 2],
+      "indent": ["error", 2, { "SwitchCase": 1 }],
     }
   },
   { ignores: ['webpack.config.js', 'tsconfig.json', 'dist/**', 'node_modules/**', 'src/shaders/**'] }

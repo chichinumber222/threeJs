@@ -15,7 +15,8 @@ module.exports = {
     indexGalaxy: './src/indexGalaxy.ts',
     indexPhysics: './src/indexPhysics.ts',
     indexCustomShaders: './src/indexCustomShaders.ts',
-    indexWaterWithShaders: './src/indexWaterWithShaders.ts'
+    indexWaterWithShaders: './src/indexWaterWithShaders.ts',
+    indexSimpleShowroom: './src/indexSimpleShowroom.ts',
   },
   output: {
     filename: '[name].bundle.js',
@@ -35,7 +36,7 @@ module.exports = {
         use: 'file-loader',
       },
       {
-        test: /\.glsl$/,
+        test: /\.(glsl|txt)$/,
         exclude: /node_modules/,
         use: 'raw-loader',
       },
@@ -110,6 +111,11 @@ module.exports = {
       template: './src/indexWaterWithShaders.html',
       filename: 'indexWaterWithShaders.html',
       chunks: ['indexWaterWithShaders']
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/indexSimpleShowroom.html',
+      filename: 'indexSimpleShowroom.html',
+      chunks: ['indexSimpleShowroom']
     }),
     new CopyWebpackPlugin({
       patterns: [

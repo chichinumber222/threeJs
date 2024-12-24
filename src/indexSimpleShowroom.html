@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple Showroom</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="./styles/indexSimpleShowroom.css">
+    <link rel="preload" as="image" href="../static/papyrus.jpeg">
+</head>
+
+<body>
+    <canvas id="webgl"></canvas>
+    <article class="text text_left no_visible"></article>
+    <article class="text text_right no_visible"></article>
+    <article class="text text_top no_visible"></article>
+    <article class="text text_bottom no_visible"></article>
+    <button class="exit exit_left no_visible"></button>
+    <button class="exit exit_right no_visible"></button>
+    <button class="exit exit_top no_visible"></button>
+    <button class="exit exit_bottom no_visible"></button>
+    <div class="start_menu">
+        <article class="controls">
+            <section class="camera_control">
+                <img class="picture_for_control" alt="camera control">
+                <span class="text_for_control">camera</span>
+            </section>
+            <section class="communications_control">
+                <img class="picture_for_control" alt="communication with objects">
+                <span class="text_for_control">objects</span>
+            </section>
+            <section class="movement_control">
+                <img class="picture_for_control" alt="movement on floor">
+                <span class="text_for_control">floor</span>
+            </section>
+        </article>
+        <button class="run" disabled>
+            Loading 
+            <span class="persentage">0</span>
+            %
+        </button>
+    </div>
+</body>
+</html>
