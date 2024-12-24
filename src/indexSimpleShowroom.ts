@@ -72,19 +72,10 @@ interface DescriptionOptionsLeftRight {
 
 type DescriptionOptions = DescriptionOptionsTopBottom | DescriptionOptionsLeftRight
 
-const lsModeKey = 'fly'
-const isFlyMode = () => {
-  return Boolean(localStorage.getItem(lsModeKey))
-}
-const changeMode = () => {
-  localStorage.setItem(lsModeKey, !isFlyMode() ? '1' : '')
-}
-document.getElementById('change_mode')?.addEventListener('click', changeMode)
-
 const props: InitSceneProps = {
   disableDefaultLights: true,
   canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
-  disableDefaultControls: isFlyMode() ? false : true,
+  disableDefaultControls: true,
 }
 
 const isMobile = mobileCheck()
@@ -971,7 +962,7 @@ const createLight = (scene: THREE.Scene) => {
   })
 }
 
-initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
+initScene(props)(async ({ scene, camera, renderer }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
   renderer.toneMapping = THREE.ReinhardToneMapping
@@ -999,48 +990,26 @@ initScene(props)(async ({ scene, camera, renderer, orbitControls }) => {
 
   const stats = initStats()
 
-  if (isFlyMode()) {
-    orbitControls!.minPolarAngle = -Math.PI
-    orbitControls!.maxPolarAngle = Math.PI
+  const [updateControl, enableControl] = useControl(camera, renderer.domElement)
 
-    let frameCounter = 0
-    function animate() {
-      requestAnimationFrame(animate)
-      renderer.render(scene, camera)
+  const [hover] = initActions(scene, camera, renderer.domElement, boxesMap, actionsMap, enableControl)
 
-      if (frameCounter > 20) {
-        console.log('position', camera.position)
-        console.log('quaternion', camera.quaternion)
-        frameCounter = 0
+  let frameCounter = 0
+  function animate() {
+    requestAnimationFrame(animate)
+    renderer.render(scene, camera)
+
+    // because hover should be not only mousemove handler
+    if (frameCounter > 20) {
+      if (!isMobile) {
+        hover()
       }
-      frameCounter++
-
-      orbitControls?.update()
-      stats.update()
+      frameCounter = 0
     }
-    animate()
-  } else {
-    const [updateControl, enableControl] = useControl(camera, renderer.domElement)
+    frameCounter++
 
-    const [hover] = initActions(scene, camera, renderer.domElement, boxesMap, actionsMap, enableControl)
-
-    let frameCounter = 0
-    function animate() {
-      requestAnimationFrame(animate)
-      renderer.render(scene, camera)
-
-      // because hover should be not only mousemove handler
-      if (frameCounter > 20) {
-        if (!isMobile) {
-          hover()
-        }
-        frameCounter = 0
-      }
-      frameCounter++
-
-      updateControl()
-      stats.update()
-    }
-    animate()
+    updateControl()
+    stats.update()
   }
+  animate()
 })
