@@ -752,12 +752,16 @@ const createBulbModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Act
   })
 }
 
-const createShelfModel = (scene: THREE.Scene) => {
+const createShelfModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+  const scale = new THREE.Vector3(0.15, 0.15, 0.1)
+  const position = new THREE.Vector3(1.28, 2, -0.5)
+  const rotation = new THREE.Euler(0, -Math.PI / 2, 0)
+
   gltfLoader.load('./static/gltf/shelf/untitled.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(0.15, 0.15, 0.1)
-    model.position.set(1.28, 2, -0.5)
-    model.rotation.set(0, -Math.PI / 2, 0)
+    model.scale.copy(scale)
+    model.position.copy(position)
+    model.rotation.copy(rotation)
     model.traverse((child) => {
       child.castShadow = true
       child.receiveShadow = true
@@ -765,6 +769,20 @@ const createShelfModel = (scene: THREE.Scene) => {
     scene.add(model)
   }, undefined, function (error) {
     console.error('error model', error)
+  })
+
+  gltfLoader.load('./static/gltf/shelf_simple/shelf_simple.gltf', (gltf) => {
+    const id = THREE.MathUtils.generateUUID()
+    const box = gltf.scene
+    box.scale.copy(scale)
+    box.position.copy(position)
+    box.rotation.copy(rotation)
+    box.traverse((child) => child.userData.id = id)
+    box.visible = false
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error box', error)
   })
 }
 
@@ -980,7 +998,7 @@ initScene(props)(async ({ scene, camera, renderer }) => {
   createCeilingPlinths(scene)
   createCeiling(scene)
   createPlantModel(scene, boxesMap)
-  createShelfModel(scene)
+  createShelfModel(scene, boxesMap)
   createCash(scene, boxesMap, actionsMap)
   createVinyl(scene, boxesMap, actionsMap)
 
