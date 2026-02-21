@@ -1,22 +1,27 @@
 import * as THREE from "three"
 import { initScene, Props as InitSceneProps } from './bootstrap/bootstrap'
-import { stats } from "./utils/stats"
+import Stats from 'stats.js'
 import { onChangeCursor } from "./utils/update-coord"
 import gsap from 'gsap'
-import { OrbitControls } from "./controller/orbit"
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import _ from 'lodash'
 import { mobileCheck } from "./utils/mobile-check"
 import plinthVertexShader from './shaders/showroom/plinth/vertex.glsl'
 import plinthFragmentShader from './shaders/showroom/plinth/fragment.glsl'
-import clockText from './static/texts/clock.txt'
+import ceilingPlinthVertexShader from './shaders/showroom/ceiling-plinth/vertex.glsl'
+import ceilingPlinthFragmentShader from './shaders/showroom/ceiling-plinth/fragment.glsl'
+import cashVertexShader from './shaders/showroom/cash/vertex.glsl'
+import cashFragmentShader from './shaders/showroom/cash/fragment.glsl'
 import dartBoard from './static/texts/dartBoard.txt'
 import pictureText from './static/texts/pictureText.txt'
+import cashText from './static/texts/cash.txt'
+import bulbText from './static/texts/bulb.txt'
+import vinylText from './static/texts/vinyl.txt'
 
 interface ActionParams {
   camera: THREE.PerspectiveCamera
   point: THREE.Vector3
-  orbitControls?: OrbitControls
+  enableControl?: (value: boolean) => void
   markers?: (THREE.Mesh | THREE.Group)[]
   enableEventHandlers: (value: boolean) => void
 }
@@ -70,55 +75,148 @@ type DescriptionOptions = DescriptionOptionsTopBottom | DescriptionOptionsLeftRi
 const props: InitSceneProps = {
   disableDefaultLights: true,
   canvasElement: <HTMLCanvasElement>document.getElementById('webgl'),
+  disableDefaultControls: true,
 }
 
 const isMobile = mobileCheck()
-const textureLoader = new THREE.TextureLoader()
-const gltfLoader = new GLTFLoader()
+const loadingManager = new THREE.LoadingManager()
+const textureLoader = new THREE.TextureLoader(loadingManager)
+const gltfLoader = new GLTFLoader(loadingManager)
 const raycaster = new THREE.Raycaster()
 const mouse = onChangeCursor()
-const floorWidth = 10
-const floorLength = 10
-const wallHeight = 3.8
+const floorWidth = 3
+const floorLength = 12
+const wallHeight = 4
 const plinthHeight = 0.1
 const plinthDepth = 0.03
+const ceilingPlinthHeight = 0.25
+const ceilingPlinthDepth = 0.03
 const offset = 0.1
-const floorOffsetX = 0.7
-const floorOffsetY = 0.1
+const floorOffset = 0.5
 const positions: Positions = {
-  start: new THREE.Vector3(1.79, 1.92, 0.48),
-  last: new THREE.Vector3(1.79, 1.92, 0.48),
+  start: new THREE.Vector3(-0.038, 1.8, 3.5),
+  last: new THREE.Vector3(-0.038, 1.8, 3.5),
 }
 const quaternions: Quaternions = {
-  start: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
-  last: new THREE.Quaternion(-0.13, 0.44, 0.07, 0.88),
+  start: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
+  last: new THREE.Quaternion(-0.1, -0.006, 0, 0.99),
 }
 
-const lsModeKey = 'fly'
-const isFlyMode = () => {
-  return Boolean(localStorage.getItem(lsModeKey))
+const initStats = () => {
+  const stats = new Stats()
+  stats.dom.style.position = 'absolute'
+  stats.dom.style.top = '0px'
+  stats.dom.style.left = '0px'
+  document.body.appendChild(stats.dom)
+  return stats
 }
-const changeMode = () => {
-  localStorage.setItem(lsModeKey, !isFlyMode() ? '1' : '')
-}
-document.getElementById('change_mode')?.addEventListener('click', changeMode)
 
-const useCameraDirection = (camera: THREE.PerspectiveCamera) => {
-  const direction = new THREE.Vector3()
-  return () => {
-    camera.getWorldDirection(direction)
-    return direction
+const initStart = () => {
+  return new Promise((resolve) => {
+    const startMenu = <HTMLElement>document.getElementsByClassName('start_menu')[0]
+    const run = <HTMLButtonElement>document.getElementsByClassName('run')[0]
+    const persentage = <HTMLElement>document.querySelector('.run .persentage')
+    loadingManager.onProgress = function (_, itemsLoaded, itemsTotal) {
+      persentage.innerHTML = `${Math.round((itemsLoaded / itemsTotal) * 100)}`
+    }
+    loadingManager.onLoad = function () {
+      run.innerHTML = `Enter the room`
+      run.disabled = false
+    }
+    run.addEventListener('click', (event) => {
+      event.stopPropagation()
+      resolve(true)
+      startMenu.classList.add('no_visible')
+    })
+  })
+}
+
+const useControl = (camera: THREE.PerspectiveCamera, container: HTMLElement) => {
+  camera.rotation.order = 'YXZ'
+  let isEnable = true
+
+  let isActive = false
+  const prevPosition = { x: 0, y: 0 }
+  let deltaX = 0
+  let deltaY = 0
+  const dampingFactorDefault = 0.95
+  let dampingFactorCurrent = dampingFactorDefault
+  const maxAngleX = Math.PI / 3
+  const minAngleX = -Math.PI / 3
+  let frameCount = 0
+
+  if (!isMobile) {
+    container.addEventListener('mousedown', (event) => {
+      if (isEnable && event.button == 0) {
+        isActive = true
+        prevPosition.x = event.clientX
+        prevPosition.y = event.clientY
+      }
+    })
+    container.addEventListener('mouseup', () => {
+      if (isEnable) {
+        isActive = false
+      }
+    })
+    container.addEventListener('mouseleave', () => {
+      if (isEnable) {
+        isActive = false
+      }
+    })
+    container.addEventListener('mousemove', (event) => {
+      if (isEnable && isActive) {
+        deltaX = event.clientX - prevPosition.x
+        deltaY = event.clientY - prevPosition.y
+        dampingFactorCurrent = dampingFactorDefault
+        prevPosition.x = event.clientX
+        prevPosition.y = event.clientY
+      }
+    })
+  } else {
+    container.addEventListener('touchstart', (event) => {
+      if (isEnable) {
+        prevPosition.x = event.touches[0].clientX
+        prevPosition.y = event.touches[0].clientY
+      }
+    })
+    container.addEventListener('touchmove', (event) => {
+      if (isEnable) {
+        deltaX = event.touches[0].clientX - prevPosition.x
+        deltaY = event.touches[0].clientY - prevPosition.y
+        dampingFactorCurrent = dampingFactorDefault
+        prevPosition.x = event.touches[0].clientX
+        prevPosition.y = event.touches[0].clientY
+      }
+    })
   }
+
+  const update = () => {
+    if (frameCount > 1) {
+      dampingFactorCurrent *= dampingFactorCurrent
+      frameCount = 0
+    }
+    frameCount++
+    const rotationDistanceY = deltaX * dampingFactorCurrent * 0.003
+    const rotationDistanceX = deltaY * dampingFactorCurrent * 0.003
+    if ((camera.rotation.x + rotationDistanceX) <= maxAngleX && (camera.rotation.x + rotationDistanceX) >= minAngleX) {
+      camera.rotation.x += rotationDistanceX
+    }
+    camera.rotation.y += rotationDistanceY
+    camera.rotation.z = 0
+  }
+
+  const enable = (value: boolean) => {
+    isActive = false
+    isEnable = value
+  }
+
+  return [update, enable] as const
 }
 
-const useControl = (camera: THREE.PerspectiveCamera, orbitControls?: OrbitControls) => {
-  const getCameraDirection = useCameraDirection(camera)
-  const cameraEyes = new THREE.Vector3()
-  return () => {
-    cameraEyes.copy(camera.position).add(getCameraDirection().multiplyScalar(0.5))
-    orbitControls?.target.copy(cameraEyes)
-    orbitControls?.update()
-  }
+const loadTexture = (url: string) => {
+  const result = textureLoader.load(url)
+  result.colorSpace = THREE.SRGBColorSpace
+  return result
 }
 
 const getRepeatableTexture = (texture: THREE.Texture, repeatCountX: number = 5, repeatCountY: number = 5) => {
@@ -134,40 +232,46 @@ const descriptionModeAnimation = (
   stopQuaternion: THREE.Quaternion,
   descriptionOptions: DescriptionOptions,
 ) => {
-  const { enableEventHandlers, orbitControls, camera } = actionParams
+  const { enableEventHandlers, enableControl, camera } = actionParams
   positions.last?.copy(camera.position)
   quaternions.last?.copy(camera.quaternion)
   enableEventHandlers(false)
-  if (orbitControls) orbitControls.enabled = false
+  enableControl?.(false)
   const timeline = gsap.timeline({
     onComplete: () => {
       let textElement: HTMLElement | null = null
       let exitButtonElement: HTMLElement | null = null
-      switch (descriptionOptions.position) {
-        case 'left': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
-          textElement.style.width = descriptionOptions?.width || '35%'
-          break
+      if (!isMobile) {
+        switch (descriptionOptions.position) {
+          case 'left': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+            textElement.style.width = descriptionOptions?.width || '35%'
+            break
+          }
+          case 'right': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
+            textElement.style.width = descriptionOptions?.width || '35%'
+            break
+          }
+          case 'top': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
+            textElement.style.height = descriptionOptions?.height || '25%'
+            break
+          }
+          case 'bottom': {
+            textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
+            exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
+            textElement.style.height = descriptionOptions?.height || '25%'
+            break
+          }
         }
-        case 'right': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_right')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_right')[0]
-          textElement.style.width = descriptionOptions?.width || '35%'
-          break
-        }
-        case 'top': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_top')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_top')[0]
-          textElement.style.height = descriptionOptions?.height || '25%'
-          break
-        }
-        case 'bottom': {
-          textElement = <HTMLElement>document.getElementsByClassName('text_bottom')[0]
-          exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_bottom')[0]
-          textElement.style.height = descriptionOptions?.height || '25%'
-          break
-        }
+      } else {
+        textElement = <HTMLElement>document.getElementsByClassName('text_left')[0]
+        exitButtonElement = <HTMLElement>document.getElementsByClassName('exit_left')[0]
+        textElement.style.width = '90%'
       }
       textElement.innerHTML = `${descriptionOptions.text}`
       const exit = (event: MouseEvent) => {
@@ -175,7 +279,8 @@ const descriptionModeAnimation = (
         camera.position.copy(positions.last || positions.start)
         camera.quaternion.copy(quaternions.last || quaternions.start)
         enableEventHandlers(true)
-        if (orbitControls) orbitControls.enabled = true
+        enableControl?.(true)
+        textElement.scrollTop = 0
         textElement.classList.add('no_visible')
         exitButtonElement.classList.add('no_visible')
         textElement.innerHTML = ``
@@ -186,25 +291,27 @@ const descriptionModeAnimation = (
       exitButtonElement.classList.remove('no_visible')
     }
   })
-  timeline.addLabel("start", 0)
-  const startQuaternion = camera.quaternion.clone()
-  const endQuaternion = stopQuaternion.clone()
-  timeline.to({ t: 0 }, {
-    duration: 1.5,
-    t: 1,
-    ease: "none",
-    onUpdate: function () {
-      const t = this.targets()[0].t
-      camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
-    }
-  }, "start")
-  timeline.to(camera.position, {
-    duration: 1.5,
-    ease: "none",
-    x: stopPosition.x,
-    z: stopPosition.z,
-    y: stopPosition.y,
-  }, "start")
+  if (!isMobile) {
+    timeline.addLabel("start", 0)
+    const startQuaternion = camera.quaternion.clone()
+    const endQuaternion = stopQuaternion.clone()
+    timeline.to({ t: 0 }, {
+      duration: 1.5,
+      t: 1,
+      ease: "none",
+      onUpdate: function () {
+        const t = this.targets()[0].t
+        camera.quaternion.slerpQuaternions(startQuaternion, endQuaternion, t)
+      }
+    }, "start")
+    timeline.to(camera.position, {
+      duration: 1.5,
+      ease: "none",
+      x: stopPosition.x,
+      z: stopPosition.z,
+      y: stopPosition.y,
+    }, "start")
+  }
 }
 
 const createWoodFloor = (scene: THREE.Scene) => {
@@ -212,9 +319,9 @@ const createWoodFloor = (scene: THREE.Scene) => {
     new THREE.PlaneGeometry(floorWidth, floorLength),
     new THREE.MeshStandardMaterial({
       color: 0xcccccc,
-      map: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/color.jpg'), 10, 10),
-      normalMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/normal.jpg'), 10, 10),
-      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/wood-floor/rough.jpg'), 10, 10),
+      map: getRepeatableTexture(loadTexture('static/textures/wood-floor/color.jpg'), 3, 10),
+      normalMap: getRepeatableTexture(loadTexture('static/textures/wood-floor/normal.jpg'), 3, 10),
+      roughnessMap: getRepeatableTexture(loadTexture('static/textures/wood-floor/rough.jpg'), 3, 10),
     })
   )
   mesh.rotation.x = - Math.PI * 0.5
@@ -226,32 +333,31 @@ const createWoodFloor = (scene: THREE.Scene) => {
 
 const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(floorWidth - 2 * floorOffsetX, floorLength - 2 * floorOffsetX),
+    new THREE.PlaneGeometry(floorWidth - 2 * floorOffset, floorLength - 2 * floorOffset),
     new THREE.MeshStandardMaterial({
       color: 0xdddddd,
-      map: getRepeatableTexture(textureLoader.load('static/textures/carpet/color.jpg')),
-      normalMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/normal.jpg')),
-      aoMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/ao.jpg')),
-      aoMapIntensity: 0.7,
-      roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/carpet/rough.jpg')),
+      map: getRepeatableTexture(loadTexture('static/textures/carpet/color.jpg'), 1, 4),
+      normalMap: getRepeatableTexture(loadTexture('static/textures/carpet/normal.jpg'), 1, 4),
+      aoMap: getRepeatableTexture(loadTexture('static/textures/carpet/ao.jpg'), 1, 4),
+      aoMapIntensity: 0.3,
+      roughnessMap: getRepeatableTexture(loadTexture('static/textures/carpet/rough.jpg'), 1, 4),
     })
   )
   mesh.rotation.x = -Math.PI * 0.5
   mesh.position.y += 0.02
   mesh.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(mesh.geometry.attributes.uv.array, 2))
   mesh.receiveShadow = true
+  mesh.castShadow = false
   mesh.name = 'carpet'
   scene.add(mesh)
   const id = THREE.MathUtils.generateUUID()
   // set actions
-  const rightClickAction = ({ point, orbitControls, enableEventHandlers, markers, camera }: ActionParams) => {
+  const rightClickAction = ({ point, enableEventHandlers, markers, camera }: ActionParams) => {
     const timeline = gsap.timeline({
       onStart: () => {
-        if (orbitControls) orbitControls.enabled = false
         enableEventHandlers(false)
       },
       onComplete: () => {
-        if (orbitControls) orbitControls!.enabled = true
         enableEventHandlers(true)
       },
     })
@@ -315,33 +421,43 @@ const createCarpet = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: Action
 const createWalls = (scene: THREE.Scene) => {
   const geometry1 = new THREE.PlaneGeometry(floorWidth, wallHeight)
   const geometry2 = new THREE.PlaneGeometry(floorLength, wallHeight)
-  const material = new THREE.MeshStandardMaterial({
+  const material1 = new THREE.MeshStandardMaterial({
     color: '#FCFBF4',
-    map: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/color.jpg'), 5, 2),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/wallpaper/normal.jpg'), 5, 2),
+    map: getRepeatableTexture(loadTexture('static/textures/wallpaper/color.jpg'), 2, 2),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/wallpaper/normal.jpg'), 2, 2),
     roughness: 0.35,
   })
-  const wallNorth = new THREE.Mesh(geometry1, material)
+  const material2 = new THREE.MeshStandardMaterial({
+    color: '#FCFBF4',
+    map: getRepeatableTexture(loadTexture('static/textures/wallpaper/color.jpg'), 7, 2),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/wallpaper/normal.jpg'), 7, 2),
+    roughness: 0.35,
+  })
+  const wallNorth = new THREE.Mesh(geometry1, material1)
   wallNorth.position.set(0, wallHeight / 2 - offset, -(floorLength / 2 - offset))
   wallNorth.name = 'wall-north'
-  const wallSouth = new THREE.Mesh(geometry1, material)
+  wallNorth.receiveShadow = true
+  const wallSouth = new THREE.Mesh(geometry1, material1)
   wallSouth.position.set(0, wallHeight / 2 - offset, floorLength / 2 - offset)
   wallSouth.rotation.set(0, Math.PI, 0)
   wallSouth.name = 'wall-south'
-  const wallWest = new THREE.Mesh(geometry2, material)
+  wallSouth.receiveShadow = true
+  const wallWest = new THREE.Mesh(geometry2, material2)
   wallWest.position.set(floorWidth / 2 - offset, wallHeight / 2 - offset, 0)
   wallWest.rotation.set(0, -Math.PI / 2, 0)
   wallWest.name = 'wall-west'
-  const wallEast = new THREE.Mesh(geometry2, material)
+  wallWest.receiveShadow = true
+  const wallEast = new THREE.Mesh(geometry2, material2)
   wallEast.position.set(-(floorWidth / 2 - offset), wallHeight / 2 - offset, 0)
   wallEast.rotation.set(0, Math.PI / 2, 0)
   wallEast.name = 'wall-east'
+  wallEast.receiveShadow = true
   scene.add(wallNorth, wallSouth, wallWest, wallEast)
 }
 
 const createPlinths = (scene: THREE.Scene) => {
-  const geometry1 = new THREE.BoxGeometry(floorWidth, plinthHeight, plinthDepth, 100, 50)
-  const geometry2 = new THREE.BoxGeometry(floorLength, plinthHeight, plinthDepth, 100, 50)
+  const geometry1 = new THREE.BoxGeometry(floorWidth, plinthHeight, plinthDepth, 50, 25)
+  const geometry2 = new THREE.BoxGeometry(floorLength, plinthHeight, plinthDepth, 50, 25)
   const material = new THREE.ShaderMaterial({
     vertexShader: plinthVertexShader,
     fragmentShader: plinthFragmentShader,
@@ -351,32 +467,63 @@ const createPlinths = (scene: THREE.Scene) => {
       }
     },
   })
-  const plinthNorth = new THREE.Mesh(geometry1, material)
-  plinthNorth.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
-  plinthNorth.name = 'plinth-north'
-  const plinthSouth = new THREE.Mesh(geometry1, material)
-  plinthSouth.position.set(0, plinthHeight / 2 + 0.001, floorLength / 2 - offset - plinthDepth / 2 - 0.001)
-  plinthSouth.rotation.set(0, Math.PI, 0)
-  plinthSouth.name = 'plinth-south'
-  const plinthWest = new THREE.Mesh(geometry2, material)
-  plinthWest.position.set(floorWidth / 2 - offset - plinthDepth / 2 - 0.001, plinthHeight / 2 + 0.001, 0)
-  plinthWest.rotation.set(0, -Math.PI / 2, 0)
-  plinthWest.name = 'plinth-west'
-  const plinthEast = new THREE.Mesh(geometry2, material)
-  plinthEast.position.set(-(floorWidth / 2 - offset - plinthDepth / 2 - 0.001), plinthHeight / 2 + 0.001, 0)
-  plinthEast.rotation.set(0, Math.PI / 2, 0)
-  plinthEast.name = 'plinth-east'
-  scene.add(plinthNorth, plinthSouth, plinthWest, plinthEast)
+  const north = new THREE.Mesh(geometry1, material)
+  north.position.set(0, plinthHeight / 2 + 0.001, -(floorLength / 2 - offset - plinthDepth / 2 - 0.001))
+  north.name = 'plinth-north'
+  const south = new THREE.Mesh(geometry1, material)
+  south.position.set(0, plinthHeight / 2 + 0.001, floorLength / 2 - offset - plinthDepth / 2 - 0.001)
+  south.rotation.set(0, Math.PI, 0)
+  south.name = 'plinth-south'
+  const west = new THREE.Mesh(geometry2, material)
+  west.position.set(floorWidth / 2 - offset - plinthDepth / 2 - 0.001, plinthHeight / 2 + 0.001, 0)
+  west.rotation.set(0, -Math.PI / 2, 0)
+  west.name = 'plinth-west'
+  const east = new THREE.Mesh(geometry2, material)
+  east.position.set(-(floorWidth / 2 - offset - plinthDepth / 2 - 0.001), plinthHeight / 2 + 0.001, 0)
+  east.rotation.set(0, Math.PI / 2, 0)
+  east.name = 'plinth-east'
+  scene.add(north, south, west, east)
+}
+
+const createCeilingPlinths = (scene: THREE.Scene) => {
+  const geometry1 = new THREE.BoxGeometry(floorWidth, ceilingPlinthHeight, ceilingPlinthDepth, 50, 25)
+  const geometry2 = new THREE.BoxGeometry(floorLength, ceilingPlinthHeight, ceilingPlinthDepth, 50, 25)
+  const material = new THREE.ShaderMaterial({
+    vertexShader: ceilingPlinthVertexShader,
+    fragmentShader: ceilingPlinthFragmentShader,
+    uniforms: {
+      vBoxHeight: {
+        value: ceilingPlinthHeight,
+      }
+    },
+  })
+  const north = new THREE.Mesh(geometry1, material)
+  north.position.set(0, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, -(floorLength / 2 - offset - ceilingPlinthDepth / 2 - 0.001))
+  north.name = 'ceiling-plinth-north'
+  const south = new THREE.Mesh(geometry1, material)
+  south.position.set(0, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, floorLength / 2 - offset - ceilingPlinthDepth / 2 - 0.001)
+  south.rotation.set(0, Math.PI, 0)
+  south.name = 'ceiling-plinth-south'
+  const west = new THREE.Mesh(geometry2, material)
+  west.position.set(floorWidth / 2 - offset - ceilingPlinthDepth / 2 - 0.001, wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, 0)
+  west.rotation.set(0, -Math.PI / 2, 0)
+  west.name = 'ceiling-plinth-west'
+  const east = new THREE.Mesh(geometry2, material)
+  east.position.set(-(floorWidth / 2 - offset - ceilingPlinthDepth / 2 - 0.001), wallHeight - offset - (ceilingPlinthHeight / 2) - 0.001, 0)
+  east.rotation.set(0, Math.PI / 2, 0)
+  east.name = 'ceiling-plinth-east'
+  scene.add(north, south, west, east)
 }
 
 const createCeiling = (scene: THREE.Scene) => {
   const geometry = new THREE.PlaneGeometry(floorWidth, floorLength)
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: getRepeatableTexture(textureLoader.load('static/textures/ceiling/color.jpg'), 4, 4),
-    normalMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/normal.jpg'), 4, 4),
-    roughnessMap: getRepeatableTexture(textureLoader.load('static/textures/ceiling/rough.jpg'), 4, 4),
+    map: getRepeatableTexture(loadTexture('static/textures/ceiling/color.jpg'), 4, 4),
+    normalMap: getRepeatableTexture(loadTexture('static/textures/ceiling/normal.jpg'), 4, 4),
+    roughnessMap: getRepeatableTexture(loadTexture('static/textures/ceiling/rough.jpg'), 4, 4),
   })
+  material.color.setScalar(2.0)
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotation.set(Math.PI / 2, 0, 0)
   mesh.position.set(0, wallHeight - offset, 0)
@@ -387,8 +534,9 @@ const createCeiling = (scene: THREE.Scene) => {
 const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
   gltfLoader.load('./static/gltf/picture.gltf/picture.gltf', (gltf) => {
     const model = gltf.scene
-    model.position.set(-2, 2, -4.85)
+    model.position.set(-1.38, 2, 1.5)
     model.scale.set(2.5, 2.5, 2.5)
+    model.rotation.set(0, Math.PI / 2, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -396,11 +544,18 @@ const createPictureModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: 
     const id = THREE.MathUtils.generateUUID()
     // set actions
     const descriptionText = `${pictureText}`
-    const cameraStopPosition = new THREE.Vector3(-1.4, 1.92, -3.7)
-    const cameraStopQuaternion = new THREE.Quaternion(0.04, 0, 0)
+    const cameraStopPosition = new THREE.Vector3(-0.33, 2, 2.11)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.006, 0.7, 0.006, 0.71)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+      },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
       }
     })
     // set box
@@ -426,8 +581,7 @@ const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap
   gltfLoader.load('./static/gltf/dartboard/dartboard.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(2, 2, 2)
-    model.position.set(4.85, 2, -1)
-    model.rotation.set(0, -Math.PI / 2, 0)
+    model.position.set(0, 2, -5.88)
     model.traverse((child) => {
       child.castShadow = true
     })
@@ -435,12 +589,19 @@ const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap
     const id = THREE.MathUtils.generateUUID()
     // set actions
     const descriptionText = `${dartBoard}`
-    const cameraStopPosition = new THREE.Vector3(4.13, 2.06, -1.57)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.02, -0.78, -0.03, 0.62)
+    const cameraStopPosition = new THREE.Vector3(0.68, 2.04, -5.17)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.03, 0.07, 0.002, 0.997)
     actionsMap.set(id, {
       leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
       },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
     })
     // set box
     const boundingBox = new THREE.Box3().setFromObject(model)
@@ -461,170 +622,11 @@ const createDartBoardModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap
   })
 }
 
-const createClockModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
-  gltfLoader.load('./static/gltf/clock/mantel_clock_01_2k.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.5, 1.5, 1.5)
-    model.position.set(1, 1.092, -1.5)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set actions
-    const descriptionText = `${clockText}`
-    const cameraStopPosition = new THREE.Vector3(0.97, 1.3, -1.1)
-    const cameraStopQuaternion = new THREE.Quaternion(-0.08, 0.15, 0.01, 0.99)
-    actionsMap.set(id, {
-      leftClick: (params: ActionParams) => {
-        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
-      },
-    })
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createSofaModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/sofa_02_1k.gltf/sofa_02_1k.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.7, 1.7, 1.7)
-    model.rotation.set(0, Math.PI, 0)
-    model.position.set(0, 0, 2.5)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createOttomanModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/ottoman/otoman.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.1, 1.1, 1.1)
-    model.position.set(-1.3, 0, 1.2)
-    model.rotation.set(0, -Math.PI / 2, 0)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createOfficeChair = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/office-chair/uploads_files_5045637_chair.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.7, 1.7, 1.7)
-    model.position.set(2, 0, -3.3)
-    model.rotation.set(0, Math.PI / 4, 0)
-    model.traverse((child) => {
-      child.castShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(Math.max(boundingBoxSize.x, boundingBoxSize.z) / 2, boundingBoxSize.y, 20, 20),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    cone.position.copy(boundingBoxCenter)
-    cone.traverse((child) => child.userData.id = id)
-    scene.add(cone)
-    boxesMap.set(id, cone)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createDesk = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/desk/uploads_files_3139729_DESK.gltf', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(0.6, 0.6, 0.6)
-    model.position.set(0, 0, -2)
-    model.rotation.set(0, Math.PI, 0)
-    model.traverse((child) => {
-      child.castShadow = true
-      child.receiveShadow = true
-    })
-    scene.add(model)
-    const id = THREE.MathUtils.generateUUID()
-    // set box
-    const boundingBox = new THREE.Box3().setFromObject(model)
-    const boundingBoxSize = new THREE.Vector3()
-    boundingBox.getSize(boundingBoxSize)
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    const boundingBoxCenter = new THREE.Vector3()
-    boundingBox.getCenter(boundingBoxCenter)
-    box.position.copy(boundingBoxCenter)
-    box.traverse((child) => child.userData.id = id)
-    scene.add(box)
-    boxesMap.set(id, box)
-  }, undefined, function (error) {
-    console.error('error model', error)
-  })
-}
-
-const createPlant1 = (scene: THREE.Scene, boxesMap: BoxesMap) => {
+const createPlantModel = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   gltfLoader.load('./static/gltf/plant1/plant1.gltf', (gltf) => {
     const model = gltf.scene
     model.scale.set(2, 2, 2)
-    model.position.set(4, 0.47, -4)
+    model.position.set(0, 0.47, 5)
     model.rotation.set(0, Math.PI / 6, 0)
     model.traverse((child) => {
       child.castShadow = true
@@ -650,39 +652,164 @@ const createPlant1 = (scene: THREE.Scene, boxesMap: BoxesMap) => {
   })
 }
 
-const createCloset = (scene: THREE.Scene, boxesMap: BoxesMap) => {
-  gltfLoader.load('./static/gltf/closet/uploads_files_4016476_cupbo222ard2.gltf', (gltf) => {
+const createCash = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  const fluctuationsDepth = 0.01
+  const fluctuationsFrequency = 50
+  const geometry = new THREE.PlaneGeometry(0.18, 0.06, 15, 15)
+  const material = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    vertexShader: cashVertexShader,
+    fragmentShader: cashFragmentShader,
+    uniforms: {
+      uTextureFront: { value: loadTexture('./static/textures/cash/front.jpg') },
+      uTextureBack: { value: loadTexture('./static/textures/cash/back.jpg') },
+      uDepth: { value: fluctuationsDepth },
+      uFrequency: { value: fluctuationsFrequency },
+    }
+  },
+  )
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.castShadow = true
+  mesh.position.set(1.25, 1.76, -0.4)
+  mesh.rotation.set(0, Math.PI / 2, 0)
+  scene.add(mesh)
+  const id = THREE.MathUtils.generateUUID()
+  // set actions
+  const descriptionText = `${cashText}`
+  const cameraStopPosition = new THREE.Vector3(1.07, 1.8, -0.42)
+  const cameraStopQuaternion = new THREE.Quaternion(-0.24, -0.65, -0.23, 0.69)
+  actionsMap.set(id, {
+    leftClick: (params: ActionParams) => {
+      descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'bottom', height: '35%' })
+    },
+    hover: (params: HoverParams) => {
+      if (params.enable) {
+        document.body.style.cursor = 'pointer'
+        return
+      }
+      document.body.style.cursor = 'default'
+    }
+  })
+  // set box
+  const boundingBox = new THREE.Box3().setFromObject(mesh)
+  const boundingBoxSize = new THREE.Vector3()
+  boundingBox.getSize(boundingBoxSize)
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(fluctuationsDepth * 2, boundingBoxSize.y, boundingBoxSize.z),
+    new THREE.MeshBasicMaterial({ visible: false })
+  )
+  const boundingBoxCenter = new THREE.Vector3()
+  boundingBox.getCenter(boundingBoxCenter)
+  box.position.copy(boundingBoxCenter)
+  box.traverse((child) => child.userData.id = id)
+  scene.add(box)
+  boxesMap.set(id, box)
+}
+
+const createBulbModel = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  gltfLoader.load('./static/gltf/bulb/bulb.gltf', (gltf) => {
     const model = gltf.scene
-    model.scale.set(0.25, 0.25, 0.25)
-    model.position.set(-4.25, 1.75, -1.8)
-    model.rotation.set(0, Math.PI / 2, 0)
+    model.scale.set(1.8, 1.8, 1.8)
+    model.position.set(1.1, 0.03, -2)
+    model.rotation.set(Math.PI / 2.6, 0, -Math.PI / 6)
+    model.traverse(child => {
+      child.castShadow = true
+    })
+    scene.add(model)
+    const id = THREE.MathUtils.generateUUID()
+    // set actions
+    const descriptionText = `${bulbText}`
+    const cameraStopPosition = new THREE.Vector3(1.022, 0.198, -2.01)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.33, -0.58, -0.27, 0.69)
+    actionsMap.set(id, {
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'left' })
+      },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
+    })
+    // set box
+    const boundingBox = new THREE.Box3().setFromObject(model)
+    const boundingBoxSize = new THREE.Vector3()
+    boundingBox.getSize(boundingBoxSize)
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y, boundingBoxSize.z),
+      new THREE.MeshBasicMaterial({ visible: false })
+    )
+    const boundingBoxCenter = new THREE.Vector3()
+    boundingBox.getCenter(boundingBoxCenter)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createShelfModel = (scene: THREE.Scene) => {
+  gltfLoader.load('./static/gltf/shelf/untitled.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.15, 0.15, 0.1)
+    model.position.set(1.28, 2, -0.5)
+    model.rotation.set(0, -Math.PI / 2, 0)
+    model.traverse((child) => {
+      child.castShadow = true
+      child.receiveShadow = true
+    })
+    scene.add(model)
+  }, undefined, function (error) {
+    console.error('error model', error)
+  })
+}
+
+const createVinyl = (scene: THREE.Scene, boxesMap: BoxesMap, actionsMap: ActionsMap) => {
+  gltfLoader.load('./static/gltf/vinyl/vinyl.gltf', (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.12, 0.12, 0.12)
+    model.position.set(1.35, 2.569, -0.6)
+    model.rotation.order = 'YZX'
+    model.rotation.set(-4 * Math.PI / 9, Math.PI / 2, 0)
     model.traverse((child) => {
       child.castShadow = true
     })
     scene.add(model)
     const id = THREE.MathUtils.generateUUID()
+    // set actions
+    const descriptionText = `${vinylText}`
+    const cameraStopPosition = new THREE.Vector3(1.066, 2.59, -0.16)
+    const cameraStopQuaternion = new THREE.Quaternion(-0.04, -0.58, -0.03, 0.81)
+    actionsMap.set(id, {
+      leftClick: (params: ActionParams) => {
+        descriptionModeAnimation(params, cameraStopPosition, cameraStopQuaternion, { text: descriptionText, position: 'right' })
+      },
+      hover: (params: HoverParams) => {
+        if (params.enable) {
+          document.body.style.cursor = 'pointer'
+          return
+        }
+        document.body.style.cursor = 'default'
+      }
+    })
     // set box
     const boundingBox = new THREE.Box3().setFromObject(model)
     const boundingBoxSize = new THREE.Vector3()
     boundingBox.getSize(boundingBoxSize)
-    const box1 = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x, boundingBoxSize.y - floorOffsetY, boundingBoxSize.z),
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(boundingBoxSize.x / 1.3, boundingBoxSize.y / 1.3, boundingBoxSize.z / 1.3),
       new THREE.MeshBasicMaterial({ visible: false })
     )
-    const box2 = new THREE.Mesh(
-      new THREE.BoxGeometry(boundingBoxSize.x + 2 * floorOffsetX, floorOffsetY, boundingBoxSize.z + 2 * floorOffsetX),
-      new THREE.MeshBasicMaterial({ visible: false })
-    )
-    box1.position.set(0, floorOffsetY / 2, 0)
-    box2.position.set(0, -(boundingBoxSize.y - floorOffsetY) / 2, 0)
-    const boxesGroup = new THREE.Group()
-    boxesGroup.add(box1, box2)
     const boundingBoxCenter = new THREE.Vector3()
     boundingBox.getCenter(boundingBoxCenter)
-    boxesGroup.position.set(boundingBoxCenter.x, boundingBoxCenter.y, boundingBoxCenter.z)
-    boxesGroup.traverse((child) => child.userData.id = id)
-    scene.add(boxesGroup)
-    boxesMap.set(id, boxesGroup)
+    box.position.copy(boundingBoxCenter)
+    box.traverse((child) => child.userData.id = id)
+    scene.add(box)
+    boxesMap.set(id, box)
   }, undefined, function (error) {
     console.error('error model', error)
   })
@@ -720,9 +847,10 @@ const createNavigationMarker = (scene: THREE.Scene) => {
 const initActions = (
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
+  container: HTMLElement,
   boxesMap: BoxesMap,
   actionsMap: ActionsMap,
-  orbitControls?: OrbitControls,
+  enableControl?: (value: boolean) => void
 ) => {
   let isActiveHover = true
   let isActiveRightClick = true
@@ -737,14 +865,14 @@ const initActions = (
 
   let prevActiveId: string | null = null
   const hover = (event?: MouseEvent) => {
-    if (!isActiveHover) {
-      return
-    }
-    event?.preventDefault()
     if (prevActiveId !== null) {
       actionsMap.get(prevActiveId)?.hover?.({ enable: false, markers })
       prevActiveId = null
     }
+    if (!isActiveHover) {
+      return
+    }
+    event?.preventDefault()
     raycaster.setFromCamera(mouse, camera)
     const intersected = raycaster.intersectObjects([...boxesMap.values()])
     if (intersected.length) {
@@ -755,7 +883,7 @@ const initActions = (
     }
   }
   if (!isMobile) {
-    window.addEventListener('mousemove', _.throttle(hover, 40))
+    container.addEventListener('mousemove', _.throttle(hover, 40))
   }
 
   const rightClick = (event?: MouseEvent) => {
@@ -769,11 +897,11 @@ const initActions = (
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
       actions?.rightClick?.({
-        camera, point, orbitControls, markers, enableEventHandlers
+        camera, point, enableControl, markers, enableEventHandlers
       })
     }
   }
-  window.addEventListener('contextmenu', rightClick)
+  container.addEventListener('contextmenu', rightClick)
 
   const leftClick = (event?: MouseEvent) => {
     if (!isActiveLeftClick) {
@@ -786,118 +914,102 @@ const initActions = (
       const { point, object } = intersected[0]
       const actions = actionsMap.get(object.userData.id)
       actions?.leftClick?.({
-        camera, point, orbitControls, markers, enableEventHandlers
+        camera, point, enableControl, markers, enableEventHandlers
       })
     }
   }
-  window.addEventListener('click', leftClick)
+  container.addEventListener('click', leftClick)
 
   return [hover, leftClick, rightClick]
 }
 
 const createLight = (scene: THREE.Scene) => {
-  gltfLoader.load('./static/gltf/lamp/lamp.glb', (gltf) => {
-    const model = gltf.scene
-    model.scale.set(1.5, 0.7, 1.5)
-    model.position.set(0, 2.51, 0)
-    scene.add(model)
+  gltfLoader.load('./static/gltf/lamp/lamp_colored6.gltf', (gltf) => {
+    const lampModel = gltf.scene
+    lampModel.scale.set(1, 0.8, 1)
+    const lamp1 = lampModel.clone()
+    lamp1.position.set(0, 3.08, 2)
+    const lamp2 = lampModel.clone()
+    lamp2.position.set(0, 3.08, -2)
+    scene.add(lamp1, lamp2)
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.3)
-    pointLight.castShadow = true
-    pointLight.position.set(0, 2.5, 0)
-    scene.add(pointLight)
+    const spotLight = new THREE.SpotLight(0xffffff, 4, 10, Math.PI / 3, 0.3, 0.3)
+    spotLight.shadow.mapSize.width = 2048
+    spotLight.shadow.mapSize.height = 2048
+    spotLight.shadow.bias = -0.00005
+    spotLight.shadow.radius = 2
+    spotLight.castShadow = true
+    const spotLight1 = spotLight.clone()
+    spotLight1.position.set(0, 3.5, 2)
+    spotLight1.target.position.set(0, 0, 2)
+    const spotLight2 = spotLight.clone()
+    spotLight2.position.set(0, 3.5, -2)
+    spotLight2.target.position.set(0, 0, -2)
+    scene.add(spotLight2, spotLight1, spotLight1.target, spotLight2.target)
+
+    const pointLight = new THREE.PointLight(0xffffff, 1, 10, 1)
+    pointLight.castShadow = false
+    const pointLight1 = pointLight.clone()
+    pointLight1.position.set(0, 3.17, 2)
+    const pointLight2 = pointLight.clone()
+    pointLight2.position.set(0, 3.17, -2)
+    scene.add(pointLight1, pointLight2)
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 2)
     scene.add(ambientLight)
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5)
-    directionalLight.position.set(0, 3, 0)
-    directionalLight.castShadow = true
-    directionalLight.shadow.camera.near = 0.1
-    directionalLight.shadow.camera.far = 20
-    directionalLight.shadow.camera.right = 5
-    directionalLight.shadow.camera.left = -5
-    directionalLight.shadow.camera.top = 5
-    directionalLight.shadow.camera.bottom = -5
-    directionalLight.shadow.mapSize.width = 1024
-    directionalLight.shadow.mapSize.height = 1024
-    directionalLight.shadow.radius = 2
-    directionalLight.shadow.bias = -0.00005
-    scene.add(directionalLight)
   }, undefined, function (error) {
     console.error('error model', error)
   })
 }
 
-initScene(props)(({ scene, camera, renderer, orbitControls }) => {
+initScene(props)(async ({ scene, camera, renderer }) => {
   camera.position.copy(positions.start)
   camera.quaternion.copy(quaternions.start)
-
-  if (!isFlyMode()) {
-    orbitControls!.rotateSpeed = -0.5
-    orbitControls!.enableZoom = false
-    orbitControls!.enablePan = false
-  }
-
-  const updateControl = useControl(camera, orbitControls)
+  renderer.toneMapping = THREE.ReinhardToneMapping
 
   const boxesMap: BoxesMap = new Map()
   const actionsMap: ActionsMap = new Map()
 
+  createBulbModel(scene, boxesMap, actionsMap)
   createPictureModel(scene, boxesMap, actionsMap)
   createDartBoardModel(scene, boxesMap, actionsMap)
-  createClockModel(scene, boxesMap, actionsMap)
   createCarpet(scene, boxesMap, actionsMap)
   createWoodFloor(scene)
   createWalls(scene)
   createPlinths(scene)
+  createCeilingPlinths(scene)
   createCeiling(scene)
-  createSofaModel(scene, boxesMap)
-  createOttomanModel(scene, boxesMap)
-  createOfficeChair(scene, boxesMap)
-  createDesk(scene, boxesMap)
-  createPlant1(scene, boxesMap)
-  createCloset(scene, boxesMap)
+  createPlantModel(scene, boxesMap)
+  createShelfModel(scene)
+  createCash(scene, boxesMap, actionsMap)
+  createVinyl(scene, boxesMap, actionsMap)
 
   createLight(scene)
 
-  if (isFlyMode()) {
-    let frameCounter = 0
-    function animate() {
-      requestAnimationFrame(animate)
-      renderer.render(scene, camera)
+  await initStart()
 
-      if (frameCounter > 20) {
-        console.log('position', camera.position)
-        console.log('quaternion', camera.quaternion)
-        frameCounter = 0
+  const stats = initStats()
+
+  const [updateControl, enableControl] = useControl(camera, renderer.domElement)
+
+  const [hover] = initActions(scene, camera, renderer.domElement, boxesMap, actionsMap, enableControl)
+
+  let frameCounter = 0
+  function animate() {
+    requestAnimationFrame(animate)
+    renderer.render(scene, camera)
+
+    // because hover should be not only mousemove handler
+    if (frameCounter > 20) {
+      if (!isMobile) {
+        hover()
       }
-      frameCounter++
-
-      orbitControls?.update()
-      stats.update()
+      frameCounter = 0
     }
-    animate()
-  } else {
-    const [hover] = initActions(scene, camera, boxesMap, actionsMap, orbitControls)
+    frameCounter++
 
-    let frameCounter = 0
-    function animate() {
-      requestAnimationFrame(animate)
-      renderer.render(scene, camera)
-
-      // because hover should be not only mousemove handler
-      if (frameCounter > 20) {
-        if (!isMobile) {
-          hover()
-        }
-        frameCounter = 0
-      }
-      frameCounter++
-
-      updateControl()
-      stats.update()
-    }
-    animate()
+    updateControl()
+    stats.update()
   }
+  animate()
 })
