@@ -148,3 +148,5 @@ initScene(props)(({ scene, camera, renderer, orbitControls }) => {
   initHelpersControls(gui, scene)
   initHelpersWater(gui, water)
 })
+
+// test commit
